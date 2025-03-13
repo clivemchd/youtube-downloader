@@ -34,3 +34,8 @@ Thumbs.db
 
 # Build output
 dist/
+
+# Logs
+logs
+*.log
+npm-debug.log*
