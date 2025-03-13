@@ -129,7 +129,8 @@
         let currentVideoUrl = '';
         let abortController = null;
 
-        async function getVideoInfo(fromToggle = false) {
+        // Make functions globally accessible
+        window.getVideoInfo = async function(fromToggle = false) {
             const videoUrl = document.getElementById('videoUrl').value.trim();
             const downloadType = document.getElementById('downloadType').checked ? 'audio' : 'video';
             const loader = document.getElementById('loader');
@@ -212,7 +213,8 @@
             return `${Math.round(bitrate / 1000)}kbps`;
         }
 
-        async function downloadVideo() {
+        // Make downloadVideo globally accessible
+        window.downloadVideo = async function() {
             const itag = document.getElementById('qualitySelect').value;
             const type = document.getElementById('downloadType').checked ? 'audio' : 'video';
             const downloadBtn = document.getElementById('downloadBtn');

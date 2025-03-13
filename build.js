@@ -46,9 +46,14 @@ const jsMinifyOptions = {
     toplevel: true,
     reserved: ['getVideoInfo', 'downloadVideo'], // Preserve these function names
     properties: {
-      // Mangle all properties except DOM properties and event handlers
+      // Mangle all properties except DOM properties, event handlers, and our global functions
       regex: /^[^_$]/,
-      reserved: ['addEventListener', 'appendChild', 'classList', 'createElement', 'getElementById', 'innerHTML', 'textContent', 'querySelector', 'style', 'src', 'href', 'value', 'checked', 'disabled', 'selected', 'type', 'name', 'id', 'className']
+      reserved: [
+        'addEventListener', 'appendChild', 'classList', 'createElement', 'getElementById', 
+        'innerHTML', 'textContent', 'querySelector', 'style', 'src', 'href', 'value', 
+        'checked', 'disabled', 'selected', 'type', 'name', 'id', 'className',
+        'getVideoInfo', 'downloadVideo' // Add our global functions to preserved properties
+      ]
     },
     safari10: true
   },
