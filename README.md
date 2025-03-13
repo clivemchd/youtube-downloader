@@ -9,6 +9,7 @@ A powerful Node.js application for downloading YouTube videos and audio with qua
 - **HD Video Support**: Download high-definition videos with merged audio and video streams
 - **Quality Selection**: Choose from available video and audio quality options
 - **Rate Limiting**: Prevents abuse with configurable request limits
+- **Proxy Support**: Automatic proxy rotation to avoid YouTube rate limits
 - **Comprehensive Logging**: Detailed logs for debugging and monitoring
 - **Robust Error Handling**: Graceful handling of errors and edge cases
 - **Clean Test Reports**: Visual test reports for development
@@ -20,6 +21,7 @@ A powerful Node.js application for downloading YouTube videos and audio with qua
 - **Backend**: Node.js with Express
 - **Video Processing**: FFmpeg for video/audio manipulation
 - **YouTube API**: @distube/ytdl-core for YouTube video extraction
+- **Proxy Management**: Automatic scraping and rotation of free proxies
 - **Logging**: Winston for structured logging
 - **Testing**: Jest and Supertest for automated testing
 - **Environment**: dotenv for environment configuration
@@ -102,57 +104,35 @@ Key environment variables:
 
 ## API Endpoints
 
-### Get Video Information
+### Video Information
 
 ```
 GET /video-info?url={youtube-url}&type={video|audio}
 ```
 
-Parameters:
-- `url`: YouTube video URL (required)
-- `type`: "video" or "audio" (optional, defaults to "video")
+Returns information about the video including available formats.
 
-Response:
-```json
-{
-  "title": "Video Title",
-  "formats": [
-    {
-      "itag": 22,
-      "quality": "720p",
-      "container": "mp4",
-      "hasAudio": true,
-      "fps": 30,
-      "videoCodec": "avc1.64001F",
-      "audioCodec": "mp4a.40.2",
-      "bitrate": 1500000
-    },
-    ...
-  ],
-  "videoDetails": {
-    "title": "Video Title",
-    "lengthSeconds": "120",
-    "author": "Channel Name",
-    "videoId": "abc123",
-    "isLive": false,
-    "thumbnails": [...]
-  }
-}
-```
-
-### Download Video or Audio
+### Download
 
 ```
-GET /download?url={youtube-url}&itag={itag}&type={video|audio}
+GET /download?url={youtube-url}&itag={format-id}&type={video|audio}
 ```
 
-Parameters:
-- `url`: YouTube video URL (required)
-- `itag`: Format identifier from the video info response (required)
-- `type`: "video" or "audio" (optional, defaults to "video")
+Downloads the video or audio in the specified format.
 
-Response:
-- Binary stream of the video or audio file
+### Proxy Status
+
+```
+GET /proxy-status
+```
+
+Returns information about the current proxy list.
+
+```
+GET /proxy-status?update=true
+```
+
+Forces an update of the proxy list and returns the updated information.
 
 ## Logging System
 

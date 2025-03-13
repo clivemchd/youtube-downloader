@@ -272,4 +272,27 @@ describe('YouTube Downloader API', () => {
             expect(rateLimited).toBe(true);
         }, 10000);
     });
+
+    describe('Proxy Management', () => {
+        it('should return proxy status information', async () => {
+            const response = await request(app)
+                .get('/proxy-status');
+
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveProperty('total');
+            expect(response.body).toHaveProperty('lastUpdated');
+            expect(response.body).toHaveProperty('proxies');
+        });
+
+        it('should update proxies when requested', async () => {
+            // This test may take longer as it scrapes the proxy website
+            const response = await request(app)
+                .get('/proxy-status?update=true');
+
+            expect(response.status).toBe(200);
+            expect(response.body).toHaveProperty('total');
+            expect(response.body).toHaveProperty('lastUpdated');
+            expect(response.body).toHaveProperty('proxies');
+        }, 30000); // Increased timeout for proxy scraping
+    });
 }); 

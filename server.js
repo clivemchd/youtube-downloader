@@ -9,6 +9,7 @@ const ffmpegPath = require('ffmpeg-static');
 const rateLimit = require('express-rate-limit');
 const NodeCache = require('node-cache');
 const logger = require('./logger');
+const proxyManager = require('./proxy-manager');
 
 // Get environment variables with defaults
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -34,7 +35,7 @@ const INITIAL_RETRY_DELAY = 1000; // 1 second
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper function to get video info with retry logic and caching
-async function getVideoInfoWithRetry(url, type, retryCount = 0) {
+async function getVideoInfoWithRetry(url, type, retryCount = 0, useProxy = true) {
     try {
         // Clean and validate the URL
         const videoId = ytdl.getVideoID(url);
@@ -51,7 +52,23 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0) {
 
         // If not in cache, fetch from YouTube
         logger.info('Fetching video info from YouTube', { videoId });
-        const info = await ytdl.getInfo(cleanURL);
+        
+        // Update proxies if needed before making the request
+        if (useProxy) {
+            await proxyManager.updateProxiesIfNeeded();
+        }
+        
+        // Get a random proxy if available and enabled
+        const proxy = useProxy ? proxyManager.getRandomProxy() : null;
+        
+        // Configure ytdl options with proxy if available
+        const ytdlOptions = {};
+        if (proxy) {
+            logger.info(`Using proxy for video info request: ${proxy}`, { videoId });
+            ytdlOptions.requestOptions = { proxy };
+        }
+        
+        const info = await ytdl.getInfo(cleanURL, ytdlOptions);
         
         // Process formats based on type
         let formats;
@@ -123,23 +140,60 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0) {
             const waitTime = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
             logger.info(`YouTube rate limit hit, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
             await delay(waitTime);
-            return getVideoInfoWithRetry(url, type, retryCount + 1);
+            
+            // Try with a different proxy on the next attempt
+            return getVideoInfoWithRetry(url, type, retryCount + 1, true);
         }
+        
+        // If there's a proxy error, try without proxy
+        if (useProxy && (error.message.includes('ECONNREFUSED') || 
+                         error.message.includes('ETIMEDOUT') || 
+                         error.message.includes('ECONNRESET'))) {
+            logger.warn(`Proxy connection failed, retrying without proxy`, { error: error.message });
+            return getVideoInfoWithRetry(url, type, retryCount, false);
+        }
+        
         throw error;
     }
 }
 
 // Helper function to get video stream with retry logic
-async function getVideoStreamWithRetry(url, options, retryCount = 0) {
+async function getVideoStreamWithRetry(url, options, retryCount = 0, useProxy = true) {
     try {
-        return ytdl(url, options);
+        // Update proxies if needed before making the request
+        if (useProxy) {
+            await proxyManager.updateProxiesIfNeeded();
+        }
+        
+        // Get a random proxy if available and enabled
+        const proxy = useProxy ? proxyManager.getRandomProxy() : null;
+        
+        // Configure ytdl options with proxy if available
+        const ytdlOptions = { ...options };
+        if (proxy) {
+            logger.info(`Using proxy for video stream request: ${proxy}`);
+            ytdlOptions.requestOptions = { proxy };
+        }
+        
+        return ytdl(url, ytdlOptions);
     } catch (error) {
         if (error.message.includes('Status code: 429') && retryCount < MAX_RETRIES) {
             const waitTime = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
             logger.info(`YouTube rate limit hit for download, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
             await delay(waitTime);
-            return getVideoStreamWithRetry(url, options, retryCount + 1);
+            
+            // Try with a different proxy on the next attempt
+            return getVideoStreamWithRetry(url, options, retryCount + 1, true);
         }
+        
+        // If there's a proxy error, try without proxy
+        if (useProxy && (error.message.includes('ECONNREFUSED') || 
+                         error.message.includes('ETIMEDOUT') || 
+                         error.message.includes('ECONNRESET'))) {
+            logger.warn(`Proxy connection failed for stream, retrying without proxy`, { error: error.message });
+            return getVideoStreamWithRetry(url, options, retryCount, false);
+        }
+        
         throw error;
     }
 }
@@ -527,4 +581,33 @@ if (require.main === module) {
         logger.info(`Server is running in ${NODE_ENV} mode on port ${PORT}`);
         logger.info(`@distube/ytdl-core version: ${ytdl.version}`);
     });
-} 
+}
+
+// Add a new endpoint to get proxy status
+app.get('/proxy-status', async (req, res) => {
+    try {
+        // Force update if requested
+        if (req.query.update === 'true') {
+            await proxyManager.forceProxyUpdate();
+        }
+        
+        const proxies = proxyManager.getProxyList();
+        const lastUpdated = proxyManager.getLastUpdated();
+        
+        res.json({
+            total: proxies.length,
+            lastUpdated: lastUpdated ? new Date(lastUpdated).toISOString() : 'Never',
+            proxies: proxies.map(p => ({
+                ip: p.ip,
+                port: p.port,
+                country: p.country,
+                anonymity: p.anonymity
+            }))
+        });
+    } catch (error) {
+        res.status(500).json({
+            error: 'Failed to get proxy status',
+            details: error.message
+        });
+    }
+}); 

@@ -17,6 +17,8 @@ node_modules/
 # Testing
 coverage/
 test-report.html
+test-results/
+playwright-report/
 
 # Temporary files
 temp/
