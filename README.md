@@ -79,6 +79,9 @@ Key environment variables:
 
 - `NODE_ENV`: Set to "development" for local development or "production" for production deployment
 - `PRODUCTION_API_URL`: The base URL for API endpoints in production (required)
+  - This URL is automatically injected into the frontend code during the build process
+  - In development mode, the frontend uses `http://localhost:3000` by default
+  - In production mode, the frontend uses the `PRODUCTION_API_URL` value
 - `PORT`: The port the server will listen on (Render.com will set this automatically)
 - `LOG_LEVEL`: Logging level (debug, info, warn, error)
 - `RATE_LIMIT_*`: Rate limiting configuration for video info endpoint
@@ -284,6 +287,11 @@ The build process automatically injects environment variables into the frontend 
 1. When setting `PRODUCTION_API_URL` in `.env.prod`, any trailing slashes will be automatically removed to prevent double slashes in API calls.
 2. Function names referenced in HTML attributes (like `onclick="getVideoInfo()"`) are preserved during minification.
 3. The build process handles both standalone JavaScript files and inline JavaScript in HTML files.
+4. Environment variables are automatically injected into the frontend code:
+   - The `API_URL` constant in the frontend JavaScript is automatically replaced with the appropriate URL based on the environment
+   - In development mode, it uses `http://localhost:3000` by default
+   - In production mode, it uses the `PRODUCTION_API_URL` from `.env.prod`
+   - This ensures that API calls are always made to the correct endpoint based on the environment
 
 #### Minification and Obfuscation Features
 

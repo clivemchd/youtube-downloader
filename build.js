@@ -134,11 +134,13 @@ function injectEnvVars(code) {
   let result = code;
   
   // Replace API_URL with the environment-specific value
+  // Using a more robust regex that will match the API_URL declaration regardless of spacing
   result = result.replace(
-    /const\s+API_URL\s*=\s*["'][^"']*["']/,
+    /const\s+API_URL\s*=\s*(['"])([^'"]*)\1/,
     `const API_URL = "${ENV_VARS.API_URL}"`
   );
   
+  logger.info(`Injected API_URL: ${ENV_VARS.API_URL}`);
   return result;
 }
 
@@ -152,10 +154,21 @@ async function processInlineJs(htmlFilePath) {
   while ((match = scriptRegex.exec(content)) !== null) {
     const scriptContent = match[1];
     
+    // Check if the script contains API_URL
+    const hasApiUrl = /const\s+API_URL\s*=/.test(scriptContent);
+    if (hasApiUrl) {
+      logger.info(`Found API_URL in ${path.basename(htmlFilePath)}`);
+    }
+    
     if (isProduction) {
       try {
         // Inject environment variables before minification
         const envInjectedCode = injectEnvVars(scriptContent);
+        
+        // Verify API_URL was replaced
+        if (hasApiUrl && !envInjectedCode.includes(ENV_VARS.API_URL)) {
+          logger.warn(`API_URL replacement may have failed in ${path.basename(htmlFilePath)}`);
+        }
         
         const minified = await minify(envInjectedCode, jsMinifyOptions);
         const obfuscatedCode = applyStringObfuscation(minified.code);
@@ -168,6 +181,12 @@ async function processInlineJs(htmlFilePath) {
     } else {
       // In development, just inject environment variables without minification
       const envInjectedCode = injectEnvVars(scriptContent);
+      
+      // Verify API_URL was replaced
+      if (hasApiUrl && !envInjectedCode.includes(ENV_VARS.API_URL)) {
+        logger.warn(`API_URL replacement may have failed in ${path.basename(htmlFilePath)}`);
+      }
+      
       modifiedContent = modifiedContent.replace(scriptContent, envInjectedCode);
       logger.info(`Injected environment variables in ${path.basename(htmlFilePath)}`);
     }
@@ -211,13 +230,14 @@ function applyStringObfuscation(code) {
   // Only obfuscate strings longer than 3 characters to avoid breaking the code
   return code.replace(stringRegex, (match) => {
     // Skip short strings, strings that look like they might be part of a URL or API endpoint,
-    // and strings that contain function names used in HTML attributes
+    // strings that contain function names used in HTML attributes, or the API_URL
     if (match.length <= 5 || 
         match.includes('http') || 
         match.includes('/') || 
         match.includes('\\') ||
         match.includes('getVideoInfo') ||
-        match.includes('downloadVideo')) {
+        match.includes('downloadVideo') ||
+        match.includes(ENV_VARS.API_URL)) {
       return match;
     }
     
