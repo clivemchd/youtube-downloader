@@ -12,7 +12,7 @@ A powerful Node.js application for downloading YouTube videos and audio with qua
 - **Comprehensive Logging**: Detailed logs for debugging and monitoring
 - **Robust Error Handling**: Graceful handling of errors and edge cases
 - **Clean Test Reports**: Visual test reports for development
-- **Environment Configuration**: Separate development and production settings
+- **Environment Configuration**: Separate development, reference, and production settings
 - **Render.com Ready**: Optimized for deployment on Render.com
 
 ## Technology Stack
@@ -51,7 +51,7 @@ The server will start on port 3000 by default.
 
 ## Environment Configuration
 
-The application uses environment variables to distinguish between development and production environments:
+The application uses environment variables to distinguish between development, reference, and production environments:
 
 ```
 # .env.example
@@ -75,12 +75,25 @@ LOG_LEVEL=info
 # ... other variables
 ```
 
+For reference environment (production-like with localhost), use `.env.ref`:
+
+```
+# .env.ref
+NODE_ENV=ref
+API_URL=http://localhost:3000
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+DOWNLOAD_LIMIT_WINDOW_MS=3600000
+DOWNLOAD_LIMIT_MAX_REQUESTS=10
+```
+
 Key environment variables:
 
-- `NODE_ENV`: Set to "development" for local development or "production" for production deployment
+- `NODE_ENV`: Set to "development" for local development, "ref" for reference environment, or "production" for production deployment
 - `PRODUCTION_API_URL`: The base URL for API endpoints in production (required)
   - This URL is automatically injected into the frontend code during the build process
   - In development mode, the frontend uses `http://localhost:3000` by default
+  - In reference mode, the frontend uses `http://localhost:3000`
   - In production mode, the frontend uses the `PRODUCTION_API_URL` value
 - `PORT`: The port the server will listen on (Render.com will set this automatically)
 - `LOG_LEVEL`: Logging level (debug, info, warn, error)
@@ -233,6 +246,22 @@ The application includes robust error handling for:
 
 ## Development
 
+### Available Scripts
+
+- `npm start`: Start the server in default mode
+- `npm run dev`: Start the server in development mode
+- `npm run ref`: Build and start the server in reference mode (production-like with localhost)
+- `npm run prod`: Build and start the server in production mode
+- `npm run build`: Build the frontend
+- `npm run build:dev`: Build the frontend in development mode
+- `npm run build:ref`: Build the frontend in reference mode
+- `npm run build:prod`: Build the frontend in production mode
+- `npm test`: Run Jest tests
+- `npm run test:e2e`: Run end-to-end tests
+- `npm run test:e2e:ui`: Run end-to-end tests with UI
+- `npm run test:e2e:debug`: Run end-to-end tests in debug mode
+- `npm run test:ref`: Run end-to-end tests against the reference build
+
 ### Project Structure
 
 ```
@@ -255,6 +284,7 @@ youtube-download/
 ├── .env.example           # Example environment variables for development
 ├── .env.prod              # Production environment variables (not committed)
 ├── .env.prod.example      # Example environment variables for production
+├── .env.ref               # Reference environment variables (not committed)
 ├── package.json           # Dependencies and scripts
 └── README.md              # Documentation
 ```
@@ -290,6 +320,7 @@ The build process automatically injects environment variables into the frontend 
 4. Environment variables are automatically injected into the frontend code:
    - The `API_URL` constant in the frontend JavaScript is automatically replaced with the appropriate URL based on the environment
    - In development mode, it uses `http://localhost:3000` by default
+   - In reference mode, it uses `http://localhost:3000`
    - In production mode, it uses the `PRODUCTION_API_URL` from `.env.prod`
    - This ensures that API calls are always made to the correct endpoint based on the environment
 

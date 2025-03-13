@@ -8,29 +8,34 @@ const logger = require('./logger');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const DIST_DIR = path.join(__dirname, 'dist');
 const isProduction = process.env.NODE_ENV === 'production';
+const isRef = process.env.NODE_ENV === 'ref';
 
 // Define environment-specific variables
 const ENV_VARS = {
-  API_URL: (process.env.API_URL || (isProduction 
-    ? process.env.PRODUCTION_API_URL || 'http://localhost:3000' // Use specific production URL from env
-    : 'http://localhost:3000')).replace(/\/+$/, '') // Remove trailing slashes
+  API_URL: (process.env.API_URL || (
+    isProduction 
+      ? process.env.PRODUCTION_API_URL || 'https://youdownloadtube.onrender.com'
+      : isRef
+        ? 'http://localhost:3000'
+        : 'http://localhost:3000'
+  )).replace(/\/+$/, '') // Remove trailing slashes
 };
 
-logger.info(`Building with API_URL: ${ENV_VARS.API_URL}`);
+logger.info(`Building with API_URL: ${ENV_VARS.API_URL} for environment: ${process.env.NODE_ENV || 'development'}`);
 
 // JavaScript minification and obfuscation options
 const jsMinifyOptions = {
   compress: {
-    drop_console: true,
-    drop_debugger: true,
-    booleans_as_integers: true,
-    passes: 3,
-    unsafe: true,
-    unsafe_math: true,
-    unsafe_methods: true,
-    unsafe_proto: true,
-    unsafe_regexp: true,
-    unsafe_undefined: true,
+    drop_console: isProduction || isRef, // Drop console in both prod and ref
+    drop_debugger: isProduction || isRef,
+    booleans_as_integers: false,
+    passes: 2,
+    unsafe: false,
+    unsafe_math: false,
+    unsafe_methods: false,
+    unsafe_proto: false,
+    unsafe_regexp: false,
+    unsafe_undefined: false,
     sequences: true,
     dead_code: true,
     conditionals: true,
@@ -43,18 +48,9 @@ const jsMinifyOptions = {
     computed_props: true
   },
   mangle: {
-    toplevel: true,
-    reserved: ['getVideoInfo', 'downloadVideo'], // Preserve these function names
-    properties: {
-      // Mangle all properties except DOM properties, event handlers, and our global functions
-      regex: /^[^_$]/,
-      reserved: [
-        'addEventListener', 'appendChild', 'classList', 'createElement', 'getElementById', 
-        'innerHTML', 'textContent', 'querySelector', 'style', 'src', 'href', 'value', 
-        'checked', 'disabled', 'selected', 'type', 'name', 'id', 'className',
-        'getVideoInfo', 'downloadVideo' // Add our global functions to preserved properties
-      ]
-    },
+    toplevel: false,
+    reserved: ['getVideoInfo', 'downloadVideo'],
+    properties: false,
     safari10: true
   },
   format: {
@@ -62,15 +58,17 @@ const jsMinifyOptions = {
     beautify: false,
     comments: false,
     indent_level: 0,
-    max_line_len: 1000,
-    webkit: true
+    max_line_len: 500,
+    webkit: true,
+    semicolons: true,
+    braces: true
   },
   sourceMap: false,
   ecma: 2020,
-  toplevel: true,
+  toplevel: false,
   ie8: false,
   keep_classnames: false,
-  keep_fnames: false,
+  keep_fnames: true,
   safari10: true,
   nameCache: null
 };
@@ -84,19 +82,12 @@ const htmlMinifyOptions = {
   removeStyleLinkTypeAttributes: true,
   useShortDoctype: true,
   minifyCSS: true,
-  minifyJS: {
-    ...jsMinifyOptions,
-    // Ensure these options are explicitly set for inline JS
-    mangle: {
-      ...jsMinifyOptions.mangle,
-      reserved: ['getVideoInfo', 'downloadVideo'] // Preserve these function names
-    }
-  },
+  minifyJS: false,
   minifyURLs: true,
-  removeAttributeQuotes: true,
+  removeAttributeQuotes: false,
   removeEmptyAttributes: true,
-  removeOptionalTags: true,
-  removeTagWhitespace: true,
+  removeOptionalTags: false,
+  removeTagWhitespace: false,
   sortAttributes: true,
   sortClassName: true,
   decodeEntities: true
@@ -229,6 +220,11 @@ async function processJsFile(filePath) {
 
 // Apply additional string obfuscation
 function applyStringObfuscation(code) {
+  // Disable string obfuscation completely
+  return code;
+  
+  // Original implementation below, commented out
+  /*
   // Find string literals in the code
   const stringRegex = /"([^"\\]*(\\.[^"\\]*)*)"|'([^'\\]*(\\.[^'\\]*)*)'/g;
   
@@ -258,6 +254,7 @@ function applyStringObfuscation(code) {
     // Create a string that will be decoded at runtime
     return `String.fromCharCode(${charCodes.join(',')})`;
   });
+  */
 }
 
 // Process CSS files

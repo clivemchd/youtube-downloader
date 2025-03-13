@@ -83,7 +83,7 @@
                 <div class="flex space-x-2">
                     <input type="text" id="videoUrl" placeholder="Enter YouTube URL" 
                            class="flex-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
-                    <button onclick="getVideoInfo()" id="getInfoBtn"
+                    <button onclick="window.getVideoInfo()" id="getInfoBtn"
                             class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200">
                         Get Info
                     </button>
@@ -92,7 +92,7 @@
                 <div class="flex items-center justify-center space-x-4">
                     <span class="text-gray-700">Video</span>
                     <label class="toggle-switch">
-                        <input type="checkbox" id="downloadType" onchange="getVideoInfo(true)">
+                        <input type="checkbox" id="downloadType" onchange="window.getVideoInfo(true)">
                         <span class="toggle-slider"></span>
                     </label>
                     <span class="text-gray-700">Audio</span>
@@ -107,7 +107,7 @@
                         <select id="qualitySelect" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
                         </select>
                     </div>
-                    <button onclick="downloadVideo()" id="downloadBtn"
+                    <button onclick="window.downloadVideo()" id="downloadBtn"
                             class="mt-4 w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200">
                         Download
                     </button>
@@ -125,207 +125,209 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3000';
-        let currentVideoUrl = '';
-        let abortController = null;
+        (function() {
+            const API_URL = 'http://localhost:3000';
+            let currentVideoUrl = '';
+            let abortController = null;
 
-        // Make functions globally accessible
-        window.getVideoInfo = async function(fromToggle = false) {
-            const videoUrl = document.getElementById('videoUrl').value.trim();
-            const downloadType = document.getElementById('downloadType').checked ? 'audio' : 'video';
-            const loader = document.getElementById('loader');
-            const videoInfo = document.getElementById('videoInfo');
-            const error = document.getElementById('error');
-            const getInfoBtn = document.getElementById('getInfoBtn');
-            const downloadProgress = document.getElementById('downloadProgress');
-            const qualityLabel = document.getElementById('qualityLabel');
+            // Make functions globally accessible
+            window.getVideoInfo = async function(fromToggle = false) {
+                const videoUrl = document.getElementById('videoUrl').value.trim();
+                const downloadType = document.getElementById('downloadType').checked ? 'audio' : 'video';
+                const loader = document.getElementById('loader');
+                const videoInfo = document.getElementById('videoInfo');
+                const error = document.getElementById('error');
+                const getInfoBtn = document.getElementById('getInfoBtn');
+                const downloadProgress = document.getElementById('downloadProgress');
+                const qualityLabel = document.getElementById('qualityLabel');
 
-            if (!videoUrl) {
-                showError('Please enter a YouTube URL');
-                return;
-            }
-
-            if (!fromToggle) {
-                // Only reset UI completely if not triggered by toggle
-                downloadProgress.classList.add('hidden');
-                getInfoBtn.disabled = true;
-                getInfoBtn.classList.add('opacity-50');
-                loader.style.display = 'block';
-                videoInfo.classList.add('hidden');
-                error.classList.add('hidden');
-            }
-
-            try {
-                const response = await fetch(`${API_URL}/video-info?url=${encodeURIComponent(videoUrl)}&type=${downloadType}`);
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.details || data.error || 'Failed to fetch video information');
+                if (!videoUrl) {
+                    showError('Please enter a YouTube URL');
+                    return;
                 }
 
-                if (!data.formats || data.formats.length === 0) {
-                    throw new Error(`No available ${downloadType} formats found for this video`);
-                }
-
-                currentVideoUrl = videoUrl;
-                displayVideoInfo(data, downloadType);
-            } catch (err) {
-                showError(err.message);
-            } finally {
-                getInfoBtn.disabled = false;
-                getInfoBtn.classList.remove('opacity-50');
-                loader.style.display = 'none';
-            }
-        }
-
-        function displayVideoInfo(data, type) {
-            const videoInfo = document.getElementById('videoInfo');
-            const videoTitle = document.getElementById('videoTitle');
-            const qualitySelect = document.getElementById('qualitySelect');
-            const qualityLabel = document.getElementById('qualityLabel');
-            const downloadBtn = document.getElementById('downloadBtn');
-
-            videoTitle.textContent = data.title;
-            qualitySelect.innerHTML = '';
-            qualityLabel.textContent = type === 'audio' ? 'Select Audio Quality:' : 'Select Video Quality:';
-            downloadBtn.textContent = type === 'audio' ? 'Download Audio' : 'Download Video';
-
-            data.formats.forEach(format => {
-                const option = document.createElement('option');
-                option.value = format.itag;
-                let qualityText = '';
-                
-                if (type === 'audio') {
-                    qualityText = `${format.audioQuality || 'Unknown'} - ${formatBitrate(format.bitrate)}`;
-                } else {
-                    qualityText = `${format.quality || 'Unknown'}${format.fps ? ` ${format.fps}fps` : ''} - ${format.container}`;
-                }
-                
-                option.textContent = qualityText;
-                qualitySelect.appendChild(option);
-            });
-
-            videoInfo.classList.remove('hidden');
-        }
-
-        function formatBitrate(bitrate) {
-            if (!bitrate) return 'Unknown bitrate';
-            return `${Math.round(bitrate / 1000)}kbps`;
-        }
-
-        // Make downloadVideo globally accessible
-        window.downloadVideo = async function() {
-            const itag = document.getElementById('qualitySelect').value;
-            const type = document.getElementById('downloadType').checked ? 'audio' : 'video';
-            const downloadBtn = document.getElementById('downloadBtn');
-            const downloadProgress = document.getElementById('downloadProgress');
-            const progressBar = document.getElementById('progressBar');
-            const downloadStatus = document.getElementById('downloadStatus');
-
-            if (!currentVideoUrl || !itag) {
-                showError('Please select a quality option first');
-                return;
-            }
-
-            // Reset previous download if any
-            if (abortController) {
-                abortController.abort();
-            }
-            abortController = new AbortController();
-
-            // Update UI
-            downloadBtn.disabled = true;
-            downloadBtn.classList.add('opacity-50');
-            downloadBtn.textContent = `Starting ${type} Download...`;
-            downloadProgress.classList.remove('hidden');
-            progressBar.style.width = '0%';
-            downloadStatus.textContent = 'Initializing download...';
-
-            try {
-                const response = await fetch(
-                    `${API_URL}/download?url=${encodeURIComponent(currentVideoUrl)}&itag=${itag}&type=${type}`,
-                    { signal: abortController.signal }
-                );
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.details || error.error || 'Download failed');
-                }
-
-                const contentLength = response.headers.get('content-length');
-                const total = parseInt(contentLength, 10);
-                let received = 0;
-
-                const reader = response.body.getReader();
-                const chunks = [];
-
-                while (true) {
-                    const { done, value } = await reader.read();
-
-                    if (done) break;
-
-                    chunks.push(value);
-                    received += value.length;
-
-                    // Update progress
-                    if (total) {
-                        const progress = (received / total) * 100;
-                        progressBar.style.width = `${progress}%`;
-                        downloadStatus.textContent = `Downloaded: ${formatBytes(received)} of ${formatBytes(total)} (${progress.toFixed(1)}%)`;
-                    } else {
-                        downloadStatus.textContent = `Downloaded: ${formatBytes(received)}`;
-                    }
-                }
-
-                // Create and download the file
-                const blob = new Blob(chunks);
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = response.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || `video.${type === 'audio' ? 'mp3' : 'mp4'}`;
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-
-                downloadStatus.textContent = 'Download completed!';
-                progressBar.style.width = '100%';
-            } catch (error) {
-                if (error.name === 'AbortError') {
-                    downloadStatus.textContent = 'Download cancelled';
-                } else {
-                    showError(error.message);
+                if (!fromToggle) {
+                    // Only reset UI completely if not triggered by toggle
                     downloadProgress.classList.add('hidden');
+                    getInfoBtn.disabled = true;
+                    getInfoBtn.classList.add('opacity-50');
+                    loader.style.display = 'block';
+                    videoInfo.classList.add('hidden');
+                    error.classList.add('hidden');
                 }
-            } finally {
-                downloadBtn.disabled = false;
-                downloadBtn.classList.remove('opacity-50');
+
+                try {
+                    const response = await fetch(`${API_URL}/video-info?url=${encodeURIComponent(videoUrl)}&type=${downloadType}`);
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.details || data.error || 'Failed to fetch video information');
+                    }
+
+                    if (!data.formats || data.formats.length === 0) {
+                        throw new Error(`No available ${downloadType} formats found for this video`);
+                    }
+
+                    currentVideoUrl = videoUrl;
+                    displayVideoInfo(data, downloadType);
+                } catch (err) {
+                    showError(err.message);
+                } finally {
+                    getInfoBtn.disabled = false;
+                    getInfoBtn.classList.remove('opacity-50');
+                    loader.style.display = 'none';
+                }
+            }
+
+            function displayVideoInfo(data, type) {
+                const videoInfo = document.getElementById('videoInfo');
+                const videoTitle = document.getElementById('videoTitle');
+                const qualitySelect = document.getElementById('qualitySelect');
+                const qualityLabel = document.getElementById('qualityLabel');
+                const downloadBtn = document.getElementById('downloadBtn');
+
+                videoTitle.textContent = data.title;
+                qualitySelect.innerHTML = '';
+                qualityLabel.textContent = type === 'audio' ? 'Select Audio Quality:' : 'Select Video Quality:';
                 downloadBtn.textContent = type === 'audio' ? 'Download Audio' : 'Download Video';
-                abortController = null;
+
+                data.formats.forEach(format => {
+                    const option = document.createElement('option');
+                    option.value = format.itag;
+                    let qualityText = '';
+                    
+                    if (type === 'audio') {
+                        qualityText = `${format.audioQuality || 'Unknown'} - ${formatBitrate(format.bitrate)}`;
+                    } else {
+                        qualityText = `${format.quality || 'Unknown'}${format.fps ? ` ${format.fps}fps` : ''} - ${format.container}`;
+                    }
+                    
+                    option.textContent = qualityText;
+                    qualitySelect.appendChild(option);
+                });
+
+                videoInfo.classList.remove('hidden');
             }
-        }
 
-        function formatBytes(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        function showError(message) {
-            const error = document.getElementById('error');
-            error.textContent = message;
-            error.classList.remove('hidden');
-            document.getElementById('videoInfo').classList.add('hidden');
-        }
-
-        // Add enter key support for the URL input
-        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                getVideoInfo();
+            function formatBitrate(bitrate) {
+                if (!bitrate) return 'Unknown bitrate';
+                return `${Math.round(bitrate / 1000)}kbps`;
             }
-        });
+
+            // Make downloadVideo globally accessible
+            window.downloadVideo = async function() {
+                const itag = document.getElementById('qualitySelect').value;
+                const type = document.getElementById('downloadType').checked ? 'audio' : 'video';
+                const downloadBtn = document.getElementById('downloadBtn');
+                const downloadProgress = document.getElementById('downloadProgress');
+                const progressBar = document.getElementById('progressBar');
+                const downloadStatus = document.getElementById('downloadStatus');
+
+                if (!currentVideoUrl || !itag) {
+                    showError('Please select a quality option first');
+                    return;
+                }
+
+                // Reset previous download if any
+                if (abortController) {
+                    abortController.abort();
+                }
+                abortController = new AbortController();
+
+                // Update UI
+                downloadBtn.disabled = true;
+                downloadBtn.classList.add('opacity-50');
+                downloadBtn.textContent = `Starting ${type} Download...`;
+                downloadProgress.classList.remove('hidden');
+                progressBar.style.width = '0%';
+                downloadStatus.textContent = 'Initializing download...';
+
+                try {
+                    const response = await fetch(
+                        `${API_URL}/download?url=${encodeURIComponent(currentVideoUrl)}&itag=${itag}&type=${type}`,
+                        { signal: abortController.signal }
+                    );
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.details || error.error || 'Download failed');
+                    }
+
+                    const contentLength = response.headers.get('content-length');
+                    const total = parseInt(contentLength, 10);
+                    let received = 0;
+
+                    const reader = response.body.getReader();
+                    const chunks = [];
+
+                    while (true) {
+                        const { done, value } = await reader.read();
+
+                        if (done) break;
+
+                        chunks.push(value);
+                        received += value.length;
+
+                        // Update progress
+                        if (total) {
+                            const progress = (received / total) * 100;
+                            progressBar.style.width = `${progress}%`;
+                            downloadStatus.textContent = `Downloaded: ${formatBytes(received)} of ${formatBytes(total)} (${progress.toFixed(1)}%)`;
+                        } else {
+                            downloadStatus.textContent = `Downloaded: ${formatBytes(received)}`;
+                        }
+                    }
+
+                    // Create and download the file
+                    const blob = new Blob(chunks);
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = response.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || `video.${type === 'audio' ? 'mp3' : 'mp4'}`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    downloadStatus.textContent = 'Download completed!';
+                    progressBar.style.width = '100%';
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        downloadStatus.textContent = 'Download cancelled';
+                    } else {
+                        showError(error.message);
+                        downloadProgress.classList.add('hidden');
+                    }
+                } finally {
+                    downloadBtn.disabled = false;
+                    downloadBtn.classList.remove('opacity-50');
+                    downloadBtn.textContent = type === 'audio' ? 'Download Audio' : 'Download Video';
+                    abortController = null;
+                }
+            }
+
+            function formatBytes(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+
+            function showError(message) {
+                const error = document.getElementById('error');
+                error.textContent = message;
+                error.classList.remove('hidden');
+                document.getElementById('videoInfo').classList.add('hidden');
+            }
+
+            // Add enter key support for the URL input
+            document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    window.getVideoInfo();
+                }
+            });
+        })();
     </script>
 </body>
 </html> 
