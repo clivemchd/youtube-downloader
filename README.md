@@ -279,6 +279,12 @@ npm run prod
 
 The build process automatically injects environment variables into the frontend code, allowing you to configure the API URL for different environments. In production, you must specify the `PRODUCTION_API_URL` in your `.env.prod` file.
 
+### Important Build Notes
+
+1. When setting `PRODUCTION_API_URL` in `.env.prod`, any trailing slashes will be automatically removed to prevent double slashes in API calls.
+2. Function names referenced in HTML attributes (like `onclick="getVideoInfo()"`) are preserved during minification.
+3. The build process handles both standalone JavaScript files and inline JavaScript in HTML files.
+
 #### Minification and Obfuscation Features
 
 The build process includes advanced minification and obfuscation techniques:

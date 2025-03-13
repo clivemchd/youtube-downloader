@@ -11,9 +11,9 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 // Define environment-specific variables
 const ENV_VARS = {
-  API_URL: process.env.API_URL || (isProduction 
+  API_URL: (process.env.API_URL || (isProduction 
     ? process.env.PRODUCTION_API_URL || 'http://localhost:3000' // Use specific production URL from env
-    : 'http://localhost:3000') // Default to localhost in development
+    : 'http://localhost:3000')).replace(/\/+$/, '') // Remove trailing slashes
 };
 
 logger.info(`Building with API_URL: ${ENV_VARS.API_URL}`);
@@ -44,7 +44,7 @@ const jsMinifyOptions = {
   },
   mangle: {
     toplevel: true,
-    reserved: [],
+    reserved: ['getVideoInfo', 'downloadVideo'], // Preserve these function names
     properties: {
       // Mangle all properties except DOM properties and event handlers
       regex: /^[^_$]/,
@@ -79,7 +79,14 @@ const htmlMinifyOptions = {
   removeStyleLinkTypeAttributes: true,
   useShortDoctype: true,
   minifyCSS: true,
-  minifyJS: jsMinifyOptions,
+  minifyJS: {
+    ...jsMinifyOptions,
+    // Ensure these options are explicitly set for inline JS
+    mangle: {
+      ...jsMinifyOptions.mangle,
+      reserved: ['getVideoInfo', 'downloadVideo'] // Preserve these function names
+    }
+  },
   minifyURLs: true,
   removeAttributeQuotes: true,
   removeEmptyAttributes: true,
@@ -203,8 +210,14 @@ function applyStringObfuscation(code) {
   
   // Only obfuscate strings longer than 3 characters to avoid breaking the code
   return code.replace(stringRegex, (match) => {
-    // Skip short strings and strings that look like they might be part of a URL or API endpoint
-    if (match.length <= 5 || match.includes('http') || match.includes('/') || match.includes('\\')) {
+    // Skip short strings, strings that look like they might be part of a URL or API endpoint,
+    // and strings that contain function names used in HTML attributes
+    if (match.length <= 5 || 
+        match.includes('http') || 
+        match.includes('/') || 
+        match.includes('\\') ||
+        match.includes('getVideoInfo') ||
+        match.includes('downloadVideo')) {
       return match;
     }
     
