@@ -9,6 +9,15 @@ const PUBLIC_DIR = path.join(__dirname, 'public');
 const DIST_DIR = path.join(__dirname, 'dist');
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Define environment-specific variables
+const ENV_VARS = {
+  API_URL: process.env.API_URL || (isProduction 
+    ? process.env.PRODUCTION_API_URL || 'http://localhost:3000' // Use specific production URL from env
+    : 'http://localhost:3000') // Default to localhost in development
+};
+
+logger.info(`Building with API_URL: ${ENV_VARS.API_URL}`);
+
 // JavaScript minification and obfuscation options
 const jsMinifyOptions = {
   compress: {
@@ -113,6 +122,19 @@ async function processHtmlFile(filePath) {
   }
 }
 
+// Function to inject environment variables into JavaScript
+function injectEnvVars(code) {
+  let result = code;
+  
+  // Replace API_URL with the environment-specific value
+  result = result.replace(
+    /const\s+API_URL\s*=\s*["'][^"']*["']/,
+    `const API_URL = "${ENV_VARS.API_URL}"`
+  );
+  
+  return result;
+}
+
 // Extract and process inline JavaScript from HTML
 async function processInlineJs(htmlFilePath) {
   const content = fs.readFileSync(htmlFilePath, 'utf8');
@@ -125,9 +147,10 @@ async function processInlineJs(htmlFilePath) {
     
     if (isProduction) {
       try {
-        const minified = await minify(scriptContent, jsMinifyOptions);
+        // Inject environment variables before minification
+        const envInjectedCode = injectEnvVars(scriptContent);
         
-        // Apply additional string obfuscation
+        const minified = await minify(envInjectedCode, jsMinifyOptions);
         const obfuscatedCode = applyStringObfuscation(minified.code);
         
         modifiedContent = modifiedContent.replace(scriptContent, obfuscatedCode);
@@ -135,6 +158,11 @@ async function processInlineJs(htmlFilePath) {
       } catch (error) {
         logger.error(`Error minifying inline JS in ${htmlFilePath}:`, error);
       }
+    } else {
+      // In development, just inject environment variables without minification
+      const envInjectedCode = injectEnvVars(scriptContent);
+      modifiedContent = modifiedContent.replace(scriptContent, envInjectedCode);
+      logger.info(`Injected environment variables in ${path.basename(htmlFilePath)}`);
     }
   }
   

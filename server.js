@@ -389,7 +389,17 @@ app.get('/download', async (req, res) => {
                 details: 'Failed to download. Please try again or select a different quality.'
             });
         } else {
-            res.end();
+            // If headers were already sent, just end the response
+            try {
+                res.end();
+            } catch (endError) {
+                // Handle EPIPE errors that might occur when ending the response
+                if (endError.code === 'EPIPE') {
+                    logger.warn('EPIPE error when ending response - client likely disconnected');
+                } else {
+                    logger.error('Error ending response:', endError);
+                }
+            }
         }
         
         // Clean up streams
@@ -399,13 +409,40 @@ app.get('/download', async (req, res) => {
     }
 });
 
-// Error handling middleware
+// Add global error handler for stream errors
 app.use((err, req, res, next) => {
+    // Handle EPIPE errors specifically
+    if (err.code === 'EPIPE' || err.message?.includes('EPIPE')) {
+        logger.warn('EPIPE error in middleware - client likely disconnected');
+        if (!res.headersSent) {
+            res.status(500).json({
+                error: 'Connection error',
+                details: 'The connection was interrupted. Please try again.'
+            });
+        } else {
+            try {
+                res.end();
+            } catch (endError) {
+                logger.warn('Error ending response after EPIPE:', endError);
+            }
+        }
+        return;
+    }
+    
+    // Handle other errors
     logger.error('Unhandled error:', err);
-    res.status(500).json({
-        error: 'Internal server error',
-        details: 'An unexpected error occurred. Please try again later.'
-    });
+    if (!res.headersSent) {
+        res.status(500).json({
+            error: 'Internal server error',
+            details: 'An unexpected error occurred. Please try again later.'
+        });
+    } else {
+        try {
+            res.end();
+        } catch (endError) {
+            logger.warn('Error ending response after error:', endError);
+        }
+    }
 });
 
 process.on('unhandledRejection', (reason, promise) => {

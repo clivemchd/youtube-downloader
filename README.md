@@ -64,7 +64,21 @@ DOWNLOAD_LIMIT_WINDOW_MS=3600000
 DOWNLOAD_LIMIT_MAX_REQUESTS=10
 ```
 
+For production, you can create a `.env.prod` file based on the provided `.env.prod.example`:
+
+```
+# .env.prod
+PRODUCTION_API_URL=https://your-production-domain.com  # Required: Set to your production API URL
+PORT=3000
+NODE_ENV=production
+LOG_LEVEL=info
+# ... other variables
+```
+
+Key environment variables:
+
 - `NODE_ENV`: Set to "development" for local development or "production" for production deployment
+- `PRODUCTION_API_URL`: The base URL for API endpoints in production (required)
 - `PORT`: The port the server will listen on (Render.com will set this automatically)
 - `LOG_LEVEL`: Logging level (debug, info, warn, error)
 - `RATE_LIMIT_*`: Rate limiting configuration for video info endpoint
@@ -138,17 +152,26 @@ The application uses Winston for structured logging with the following features:
 
 ## Testing
 
-The application includes comprehensive tests for all endpoints and features:
+The application includes comprehensive tests to ensure functionality:
 
-```
+```bash
 npm test
 ```
 
-Test features include:
-- HTML test reports (`test-report.html`)
-- Custom console reporter with clear pass/fail indicators
-- Mocked logger during tests
-- Proper handling of stream closures
+This will run Jest tests that verify:
+- API responses for valid and invalid URLs
+- Video download initiation
+- Audio-only format handling
+- Rate limiting functionality
+
+### Test Notes
+
+- Tests use a public domain video for validation
+- Network errors (like EPIPE) are properly handled in tests
+- An HTML test report is generated at `./test-report.html`
+- Tests include proper cleanup of resources
+
+For end-to-end testing, the application uses mocked responses to avoid actual downloads during testing.
 
 ### End-to-End Testing
 
@@ -225,8 +248,10 @@ youtube-download/
 ├── playwright.config.js   # Playwright configuration
 ├── custom-reporter.js     # Custom test reporter
 ├── jest.setup.js          # Test setup
-├── .env                   # Environment variables (not committed)
-├── .env.example           # Example environment variables
+├── .env                   # Development environment variables (not committed)
+├── .env.example           # Example environment variables for development
+├── .env.prod              # Production environment variables (not committed)
+├── .env.prod.example      # Example environment variables for production
 ├── package.json           # Dependencies and scripts
 └── README.md              # Documentation
 ```
@@ -251,6 +276,8 @@ npm run build:prod
 # Build and run in production mode
 npm run prod
 ```
+
+The build process automatically injects environment variables into the frontend code, allowing you to configure the API URL for different environments. In production, you must specify the `PRODUCTION_API_URL` in your `.env.prod` file.
 
 #### Minification and Obfuscation Features
 
@@ -300,12 +327,17 @@ This application is optimized for deployment on Render.com:
 3. Configure the service:
    - **Environment**: Node
    - **Build Command**: `npm install && npm run build:prod`
-   - **Start Command**: `NODE_ENV=production node server.js`
-   - **Environment Variables**: Set any required variables
+   - **Start Command**: `NODE_ENV=production node -r dotenv/config server.js`
+   - **Environment Variables**: 
+     - `PRODUCTION_API_URL`: Set to your Render.com domain (e.g., `https://your-app.onrender.com`)
+     - `PORT`: Automatically set by Render.com
+     - `NODE_ENV`: Set to `production`
+     - Other variables as needed from `.env.prod.example`
 
 ### Important Render.com Configuration Notes
 
 - Render automatically sets the `PORT` environment variable, which this application respects
+- You must set the `PRODUCTION_API_URL` to your Render.com domain for API calls to work correctly
 - For proper logging on Render, logs are also sent to stdout/stderr
 - Temporary files are stored in `/tmp` on Render to avoid disk space issues
 - Rate limiting is configured to be more strict in production

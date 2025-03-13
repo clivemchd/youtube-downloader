@@ -916,3 +916,183 @@
 {"level":"info","message":"Minified and obfuscated inline JS in index.html","service":"youtube-downloader","timestamp":"2025-03-13 17:59:53"}
 {"level":"info","message":"Minified HTML: index.html","service":"youtube-downloader","timestamp":"2025-03-13 17:59:53"}
 {"level":"info","message":"Build completed in 0.115 seconds","service":"youtube-downloader","timestamp":"2025-03-13 17:59:53"}
+{"level":"info","message":"Server shutting down","service":"youtube-downloader","timestamp":"2025-03-13 18:18:53"}
+{"level":"info","message":"Logger initialized in test mode","service":"youtube-downloader","timestamp":"2025-03-13 18:29:11"}
+{"level":"info","message":"\n\n","service":"youtube-downloader","timestamp":"2025-03-13 18:29:11"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:29:11"}
+{"level":"info","message":"🚀 STARTING YOUTUBE DOWNLOADER TESTS","service":"youtube-downloader","timestamp":"2025-03-13 18:29:11"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:29:11"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:29:11"}
+{"level":"info","message":"🔍 Running: server.test.js - undefined","service":"youtube-downloader","timestamp":"2025-03-13 18:29:11"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"--------------------------------------------------------------------------------","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"📋 Test File: server.test.js","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"✅ Passed: 10, ❌ Failed: 0, ⏸️ Pending: 0","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"--------------------------------------------------------------------------------","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"✅ PASS - should return video information for valid URL (2.25s)","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"✅ PASS - should return error for invalid URL (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"✅ PASS - should return error when no URL provided (0.00s)","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"✅ PASS - should handle audio-only format requests (1.06s)","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"✅ PASS - should initiate video download for valid URL and itag (3.85s)","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"✅ PASS - should return error for missing URL (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"✅ PASS - should return error for missing itag (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"✅ PASS - should handle audio downloads (2.08s)","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"✅ PASS - should limit video info requests (0.02s)","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"✅ PASS - should limit download requests (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"📊 TEST SUMMARY","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"Total Test Suites: 1","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"Total Tests: 10","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"Passed: 10","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"Failed: 0","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"Pending: 0","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"Time: 9.86s","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"🏁 FINISHED ✅ SUCCESS","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"🎉 All tests passed! Your YouTube Downloader is working correctly.","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"📝 HTML report generated at: ./test-report.html","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:29:21"}
+{"level":"info","message":"Logger initialized in production mode","service":"youtube-downloader","timestamp":"2025-03-13 18:30:27"}
+{"level":"info","message":"Building with API_URL: https://your-production-domain.com","service":"youtube-downloader","timestamp":"2025-03-13 18:30:27"}
+{"level":"info","message":"Starting build process in production mode","service":"youtube-downloader","timestamp":"2025-03-13 18:30:27"}
+{"level":"info","message":"Cleaned and recreated distribution directory: /Users/clive.machado/Documents/clive-per-work/youtube-download/dist","service":"youtube-downloader","timestamp":"2025-03-13 18:30:27"}
+{"level":"info","message":"Minified and obfuscated inline JS in index.html","service":"youtube-downloader","timestamp":"2025-03-13 18:30:27"}
+{"level":"info","message":"Minified HTML: index.html","service":"youtube-downloader","timestamp":"2025-03-13 18:30:27"}
+{"level":"info","message":"Build completed in 0.113 seconds","service":"youtube-downloader","timestamp":"2025-03-13 18:30:27"}
+{"level":"info","message":"Logger initialized in test mode","service":"youtube-downloader","timestamp":"2025-03-13 18:32:15"}
+{"level":"info","message":"\n\n","service":"youtube-downloader","timestamp":"2025-03-13 18:32:15"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:32:15"}
+{"level":"info","message":"🚀 STARTING YOUTUBE DOWNLOADER TESTS","service":"youtube-downloader","timestamp":"2025-03-13 18:32:15"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:32:15"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:32:15"}
+{"level":"info","message":"🔍 Running: server.test.js - undefined","service":"youtube-downloader","timestamp":"2025-03-13 18:32:15"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"--------------------------------------------------------------------------------","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"📋 Test File: server.test.js","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"✅ Passed: 9, ❌ Failed: 1, ⏸️ Pending: 0","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"--------------------------------------------------------------------------------","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"✅ PASS - should return video information for valid URL (1.71s)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"✅ PASS - should return error for invalid URL (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"✅ PASS - should return error when no URL provided (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"✅ PASS - should handle audio-only format requests (1.31s)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"✅ PASS - should initiate video download for valid URL and itag (2.13s)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"❌ FAIL - should return error for missing URL (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"  Error Details:","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"  Error: write EPIPE\n    at WriteWrap.onWriteComplete [as oncomplete] (node:internal/stream_base_commons:94:16)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"  Error: write EPIPE\n    at WriteWrap.onWriteComplete [as oncomplete] (node:internal/stream_base_commons:94:16)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"✅ PASS - should return error for missing itag (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"✅ PASS - should handle audio downloads (0.06s)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"✅ PASS - should limit video info requests (0.02s)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"✅ PASS - should limit download requests (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"📊 TEST SUMMARY","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"Total Test Suites: 1","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"Total Tests: 10","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"Passed: 9","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"Failed: 1","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"Pending: 0","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"Time: 5.74s","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"❌ FAILED TESTS:","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"- YouTube Downloader API GET /download should return error for missing URL","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"🏁 FINISHED ❌ FAILURE","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"⚠️ Some tests failed. Please check the error details above.","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"📝 HTML report generated at: ./test-report.html","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:32:21"}
+{"level":"info","message":"Logger initialized in test mode","service":"youtube-downloader","timestamp":"2025-03-13 18:33:02"}
+{"level":"info","message":"\n\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:02"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:02"}
+{"level":"info","message":"🚀 STARTING YOUTUBE DOWNLOADER TESTS","service":"youtube-downloader","timestamp":"2025-03-13 18:33:02"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:02"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:02"}
+{"level":"info","message":"🔍 Running: server.test.js - undefined","service":"youtube-downloader","timestamp":"2025-03-13 18:33:02"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"--------------------------------------------------------------------------------","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"📋 Test File: server.test.js","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"✅ Passed: 10, ❌ Failed: 0, ⏸️ Pending: 0","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"--------------------------------------------------------------------------------","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"✅ PASS - should return video information for valid URL (1.52s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"✅ PASS - should return error for invalid URL (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"✅ PASS - should return error when no URL provided (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"✅ PASS - should handle audio-only format requests (1.04s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"✅ PASS - should initiate video download for valid URL and itag (2.27s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"✅ PASS - should return error for missing URL (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"✅ PASS - should return error for missing itag (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"✅ PASS - should handle audio downloads (3.43s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"✅ PASS - should limit video info requests (0.02s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"✅ PASS - should limit download requests (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"📊 TEST SUMMARY","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"Total Test Suites: 1","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"Total Tests: 10","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"Passed: 10","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"Failed: 0","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"Pending: 0","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"Time: 8.76s","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"🏁 FINISHED ✅ SUCCESS","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"🎉 All tests passed! Your YouTube Downloader is working correctly.","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"📝 HTML report generated at: ./test-report.html","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:10"}
+{"level":"info","message":"Logger initialized in test mode","service":"youtube-downloader","timestamp":"2025-03-13 18:33:45"}
+{"level":"info","message":"\n\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:45"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:45"}
+{"level":"info","message":"🚀 STARTING YOUTUBE DOWNLOADER TESTS","service":"youtube-downloader","timestamp":"2025-03-13 18:33:45"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:45"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:45"}
+{"level":"info","message":"🔍 Running: server.test.js - undefined","service":"youtube-downloader","timestamp":"2025-03-13 18:33:45"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"--------------------------------------------------------------------------------","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"📋 Test File: server.test.js","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"✅ Passed: 10, ❌ Failed: 0, ⏸️ Pending: 0","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"--------------------------------------------------------------------------------","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"✅ PASS - should return video information for valid URL (1.26s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"✅ PASS - should return error for invalid URL (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"✅ PASS - should return error when no URL provided (0.00s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"✅ PASS - should handle audio-only format requests (1.13s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"✅ PASS - should initiate video download for valid URL and itag (2.18s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"✅ PASS - should return error for missing URL (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"✅ PASS - should return error for missing itag (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"✅ PASS - should handle audio downloads (0.04s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"✅ PASS - should limit video info requests (0.02s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"✅ PASS - should limit download requests (0.01s)","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"📊 TEST SUMMARY","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"Total Test Suites: 1","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"Total Tests: 10","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"Passed: 10","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"Failed: 0","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"Pending: 0","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"Time: 5.17s","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"🏁 FINISHED ✅ SUCCESS","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"================================================================================","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"🎉 All tests passed! Your YouTube Downloader is working correctly.","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"📝 HTML report generated at: ./test-report.html","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}
+{"level":"info","message":"\n","service":"youtube-downloader","timestamp":"2025-03-13 18:33:50"}

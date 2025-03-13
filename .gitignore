@@ -9,6 +9,7 @@ npm-debug.log*
 .env.development
 .env.test
 .env.production
+.env.prod
 
 # Dependency directories
 node_modules/
