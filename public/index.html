@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Video Downloader</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 3px solid #3498db;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: none;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s ease;
+        }
+        /* Toggle switch styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #2196F3;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+            <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">YouTube Downloader</h1>
+            
+            <div class="space-y-4">
+                <div class="flex space-x-2">
+                    <input type="text" id="videoUrl" placeholder="Enter YouTube URL" 
+                           class="flex-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <button onclick="getVideoInfo()" id="getInfoBtn"
+                            class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-200">
+                        Get Info
+                    </button>
+                </div>
+
+                <div class="flex items-center justify-center space-x-4">
+                    <span class="text-gray-700">Video</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="downloadType" onchange="getVideoInfo(true)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="text-gray-700">Audio</span>
+                </div>
+
+                <div id="loader" class="loader mx-auto"></div>
+
+                <div id="videoInfo" class="hidden">
+                    <h2 id="videoTitle" class="text-xl font-semibold mb-4"></h2>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-gray-700" id="qualityLabel">Select Quality:</label>
+                        <select id="qualitySelect" class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        </select>
+                    </div>
+                    <button onclick="downloadVideo()" id="downloadBtn"
+                            class="mt-4 w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition duration-200">
+                        Download
+                    </button>
+                    <div id="downloadProgress" class="hidden mt-4 space-y-2">
+                        <div class="progress-bar">
+                            <div class="progress" id="progressBar"></div>
+                        </div>
+                        <div class="text-sm text-gray-600" id="downloadStatus"></div>
+                    </div>
+                </div>
+
+                <div id="error" class="hidden text-red-500 text-center p-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        let currentVideoUrl = '';
+        let abortController = null;
+
+        async function getVideoInfo(fromToggle = false) {
+            const videoUrl = document.getElementById('videoUrl').value.trim();
+            const downloadType = document.getElementById('downloadType').checked ? 'audio' : 'video';
+            const loader = document.getElementById('loader');
+            const videoInfo = document.getElementById('videoInfo');
+            const error = document.getElementById('error');
+            const getInfoBtn = document.getElementById('getInfoBtn');
+            const downloadProgress = document.getElementById('downloadProgress');
+            const qualityLabel = document.getElementById('qualityLabel');
+
+            if (!videoUrl) {
+                showError('Please enter a YouTube URL');
+                return;
+            }
+
+            if (!fromToggle) {
+                // Only reset UI completely if not triggered by toggle
+                downloadProgress.classList.add('hidden');
+                getInfoBtn.disabled = true;
+                getInfoBtn.classList.add('opacity-50');
+                loader.style.display = 'block';
+                videoInfo.classList.add('hidden');
+                error.classList.add('hidden');
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/video-info?url=${encodeURIComponent(videoUrl)}&type=${downloadType}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.details || data.error || 'Failed to fetch video information');
+                }
+
+                if (!data.formats || data.formats.length === 0) {
+                    throw new Error(`No available ${downloadType} formats found for this video`);
+                }
+
+                currentVideoUrl = videoUrl;
+                displayVideoInfo(data, downloadType);
+            } catch (err) {
+                showError(err.message);
+            } finally {
+                getInfoBtn.disabled = false;
+                getInfoBtn.classList.remove('opacity-50');
+                loader.style.display = 'none';
+            }
+        }
+
+        function displayVideoInfo(data, type) {
+            const videoInfo = document.getElementById('videoInfo');
+            const videoTitle = document.getElementById('videoTitle');
+            const qualitySelect = document.getElementById('qualitySelect');
+            const qualityLabel = document.getElementById('qualityLabel');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            videoTitle.textContent = data.title;
+            qualitySelect.innerHTML = '';
+            qualityLabel.textContent = type === 'audio' ? 'Select Audio Quality:' : 'Select Video Quality:';
+            downloadBtn.textContent = type === 'audio' ? 'Download Audio' : 'Download Video';
+
+            data.formats.forEach(format => {
+                const option = document.createElement('option');
+                option.value = format.itag;
+                let qualityText = '';
+                
+                if (type === 'audio') {
+                    qualityText = `${format.audioQuality || 'Unknown'} - ${formatBitrate(format.bitrate)}`;
+                } else {
+                    qualityText = `${format.quality || 'Unknown'}${format.fps ? ` ${format.fps}fps` : ''} - ${format.container}`;
+                }
+                
+                option.textContent = qualityText;
+                qualitySelect.appendChild(option);
+            });
+
+            videoInfo.classList.remove('hidden');
+        }
+
+        function formatBitrate(bitrate) {
+            if (!bitrate) return 'Unknown bitrate';
+            return `${Math.round(bitrate / 1000)}kbps`;
+        }
+
+        async function downloadVideo() {
+            const itag = document.getElementById('qualitySelect').value;
+            const type = document.getElementById('downloadType').checked ? 'audio' : 'video';
+            const downloadBtn = document.getElementById('downloadBtn');
+            const downloadProgress = document.getElementById('downloadProgress');
+            const progressBar = document.getElementById('progressBar');
+            const downloadStatus = document.getElementById('downloadStatus');
+
+            if (!currentVideoUrl || !itag) {
+                showError('Please select a quality option first');
+                return;
+            }
+
+            // Reset previous download if any
+            if (abortController) {
+                abortController.abort();
+            }
+            abortController = new AbortController();
+
+            // Update UI
+            downloadBtn.disabled = true;
+            downloadBtn.classList.add('opacity-50');
+            downloadBtn.textContent = `Starting ${type} Download...`;
+            downloadProgress.classList.remove('hidden');
+            progressBar.style.width = '0%';
+            downloadStatus.textContent = 'Initializing download...';
+
+            try {
+                const response = await fetch(
+                    `${API_URL}/download?url=${encodeURIComponent(currentVideoUrl)}&itag=${itag}&type=${type}`,
+                    { signal: abortController.signal }
+                );
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.details || error.error || 'Download failed');
+                }
+
+                const contentLength = response.headers.get('content-length');
+                const total = parseInt(contentLength, 10);
+                let received = 0;
+
+                const reader = response.body.getReader();
+                const chunks = [];
+
+                while (true) {
+                    const { done, value } = await reader.read();
+
+                    if (done) break;
+
+                    chunks.push(value);
+                    received += value.length;
+
+                    // Update progress
+                    if (total) {
+                        const progress = (received / total) * 100;
+                        progressBar.style.width = `${progress}%`;
+                        downloadStatus.textContent = `Downloaded: ${formatBytes(received)} of ${formatBytes(total)} (${progress.toFixed(1)}%)`;
+                    } else {
+                        downloadStatus.textContent = `Downloaded: ${formatBytes(received)}`;
+                    }
+                }
+
+                // Create and download the file
+                const blob = new Blob(chunks);
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = response.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || `video.${type === 'audio' ? 'mp3' : 'mp4'}`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                downloadStatus.textContent = 'Download completed!';
+                progressBar.style.width = '100%';
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    downloadStatus.textContent = 'Download cancelled';
+                } else {
+                    showError(error.message);
+                    downloadProgress.classList.add('hidden');
+                }
+            } finally {
+                downloadBtn.disabled = false;
+                downloadBtn.classList.remove('opacity-50');
+                downloadBtn.textContent = type === 'audio' ? 'Download Audio' : 'Download Video';
+                abortController = null;
+            }
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showError(message) {
+            const error = document.getElementById('error');
+            error.textContent = message;
+            error.classList.remove('hidden');
+            document.getElementById('videoInfo').classList.add('hidden');
+        }
+
+        // Add enter key support for the URL input
+        document.getElementById('videoUrl').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                getVideoInfo();
+            }
+        });
+    </script>
+</body>
+</html> 
