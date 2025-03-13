@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const ytdl = require('@distube/ytdl-core');
@@ -8,44 +9,61 @@ const ffmpegPath = require('ffmpeg-static');
 const rateLimit = require('express-rate-limit');
 const logger = require('./logger');
 
+// Get environment variables with defaults
+const NODE_ENV = process.env.NODE_ENV || 'development';
+const PORT = process.env.PORT || 3000;
+const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10); // 15 minutes
+const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10);
+const DOWNLOAD_LIMIT_WINDOW_MS = parseInt(process.env.DOWNLOAD_LIMIT_WINDOW_MS || '3600000', 10); // 1 hour
+const DOWNLOAD_LIMIT_MAX_REQUESTS = parseInt(process.env.DOWNLOAD_LIMIT_MAX_REQUESTS || '10', 10);
+const TEMP_DIR = process.env.TEMP_DIR || path.join(__dirname, 'temp');
+
 // Set ffmpeg path
 ffmpeg.setFfmpegPath(ffmpegPath);
 
 const app = express();
-const PORT = 3000;
 
 // Create temp directory if it doesn't exist
-const tempDir = path.join(__dirname, 'temp');
-if (!fs.existsSync(tempDir)) {
-    fs.mkdirSync(tempDir);
+if (!fs.existsSync(TEMP_DIR)) {
+    fs.mkdirSync(TEMP_DIR, { recursive: true });
+    logger.info(`Created temporary directory: ${TEMP_DIR}`);
 }
 
 // Rate limiting configuration
 const videoInfoLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    max: RATE_LIMIT_MAX_REQUESTS,
     message: {
         error: 'Too many requests',
-        details: 'Please try again after 15 minutes'
-    },
-    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-    legacyHeaders: false // Disable the `X-RateLimit-*` headers
-});
-
-const downloadLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
-    max: 10, // Limit each IP to 10 downloads per hour
-    message: {
-        error: 'Download limit exceeded',
-        details: 'Please try again after 1 hour'
+        details: `Please try again after ${Math.ceil(RATE_LIMIT_WINDOW_MS / 60000)} minutes`
     },
     standardHeaders: true,
     legacyHeaders: false
 });
 
+const downloadLimiter = rateLimit({
+    windowMs: DOWNLOAD_LIMIT_WINDOW_MS,
+    max: DOWNLOAD_LIMIT_MAX_REQUESTS,
+    message: {
+        error: 'Download limit exceeded',
+        details: `Please try again after ${Math.ceil(DOWNLOAD_LIMIT_WINDOW_MS / 60000)} minutes`
+    },
+    standardHeaders: true,
+    legacyHeaders: false
+});
+
+// Apply middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+
+// Serve static files from the appropriate directory based on environment
+if (NODE_ENV === 'production') {
+    app.use(express.static('dist'));
+    logger.info('Serving static files from dist directory (production mode)');
+} else {
+    app.use(express.static('public'));
+    logger.info('Serving static files from public directory (development mode)');
+}
 
 // Apply rate limiters to specific routes
 app.use('/video-info', videoInfoLimiter);
@@ -65,10 +83,10 @@ app.get('/video-info', async (req, res) => {
         const videoId = ytdl.getVideoID(videoURL);
         const cleanURL = `https://www.youtube.com/watch?v=${videoId}`;
 
-        logger.info('Fetching video info for:', cleanURL);
+        logger.info('Fetching video info', { url: cleanURL, type, videoId });
         
         const info = await ytdl.getInfo(cleanURL);
-        logger.info('Video info fetched successfully');
+        logger.info('Video info fetched successfully', { videoId });
 
         // Get available formats based on type
         let formats;
@@ -121,7 +139,7 @@ app.get('/video-info', async (req, res) => {
             }, {}));
         }
 
-        logger.info(`Found ${formats.length} valid formats`);
+        logger.info(`Found ${formats.length} valid formats`, { videoId });
 
         if (formats.length === 0) {
             throw new Error(`No downloadable ${type} formats found for this video`);
@@ -140,7 +158,11 @@ app.get('/video-info', async (req, res) => {
             }
         });
     } catch (error) {
-        logger.error('Error in /video-info:', error);
+        logger.error('Error in /video-info', { 
+            error: error.message,
+            stack: error.stack,
+            url: req.query.url 
+        });
         res.status(400).json({ 
             error: error.message,
             details: 'Failed to fetch video information. Please make sure the URL is correct and the video is available.'
@@ -214,7 +236,12 @@ app.get('/download', async (req, res) => {
 
             // Handle FFmpeg errors
             ffmpeg.stderr.on('data', (data) => {
-                logger.info('FFmpeg Log:', data.toString());
+                const logMessage = data.toString();
+                if (logMessage.includes('Error') || logMessage.includes('error')) {
+                    logger.error('FFmpeg Error:', logMessage);
+                } else {
+                    logger.debug('FFmpeg Log:', logMessage);
+                }
             });
 
             // Handle stream errors
@@ -300,7 +327,12 @@ app.get('/download', async (req, res) => {
 
                 // Handle FFmpeg errors
                 ffmpeg.stderr.on('data', (data) => {
-                    logger.info('FFmpeg Log:', data.toString());
+                    const logMessage = data.toString();
+                    if (logMessage.includes('Error') || logMessage.includes('error')) {
+                        logger.error('FFmpeg Error:', logMessage);
+                    } else {
+                        logger.debug('FFmpeg Log:', logMessage);
+                    }
                 });
 
                 // Handle stream errors
@@ -382,10 +414,11 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // Cleanup function to remove temp files
 function cleanup() {
-    if (fs.existsSync(tempDir)) {
-        fs.readdirSync(tempDir).forEach(file => {
-            fs.unlinkSync(path.join(tempDir, file));
+    if (fs.existsSync(TEMP_DIR)) {
+        fs.readdirSync(TEMP_DIR).forEach(file => {
+            fs.unlinkSync(path.join(TEMP_DIR, file));
         });
+        logger.info(`Cleaned up temporary directory: ${TEMP_DIR}`);
     }
 }
 
@@ -394,6 +427,7 @@ cleanup();
 
 // Clean up temp files on server exit
 process.on('SIGINT', () => {
+    logger.info('Server shutting down');
     cleanup();
     process.exit();
 });
@@ -404,7 +438,7 @@ module.exports = app;
 // Only start the server if this file is run directly (not required by tests)
 if (require.main === module) {
     app.listen(PORT, () => {
-        logger.info(`Server is running on port ${PORT}`);
+        logger.info(`Server is running in ${NODE_ENV} mode on port ${PORT}`);
         logger.info(`@distube/ytdl-core version: ${ytdl.version}`);
     });
 } 

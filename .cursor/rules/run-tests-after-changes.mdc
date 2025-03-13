@@ -1,0 +1,9 @@
+---
+description: Always test after making code changes
+globs: 
+alwaysApply: false
+---
+
+# Make sure to always test after you make changes to any files
+
+- Make sure to always test after you update any files in the codebase.

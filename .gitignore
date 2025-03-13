@@ -1,2 +1,35 @@
-node_modules
-temp
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Dependency directories
+node_modules/
+
+# Testing
+coverage/
+test-report.html
+
+# Temporary files
+temp/
+tmp/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Build output
+dist/

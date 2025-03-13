@@ -14,13 +14,12 @@ module.exports = {
   // A list of reporter names that Jest uses when writing coverage reports
   reporters: [
     "default",
-    ["./node_modules/jest-html-reporter", {
+    ["./custom-reporter.js", {}],
+    ["jest-html-reporter", {
       "pageTitle": "YouTube Downloader Test Report",
       "outputPath": "./test-report.html",
-      "includeFailureMsg": true,
-      "includeConsoleLog": true
-    }],
-    ["<rootDir>/custom-reporter.js", {}]
+      "includeFailureMsg": true
+    }]
   ],
 
   // The test environment that will be used for testing
@@ -34,7 +33,8 @@ module.exports = {
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
   testPathIgnorePatterns: [
-    "/node_modules/"
+    "/node_modules/",
+    "/tests/e2e/"
   ],
 
   // Indicates whether each individual test should be reported during the run

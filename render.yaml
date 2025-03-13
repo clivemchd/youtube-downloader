@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: youtube-downloader
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_TO_CONSOLE
+        value: true
+      - key: LOG_TO_FILE
+        value: false
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 50
+      - key: DOWNLOAD_LIMIT_WINDOW_MS
+        value: 3600000
+      - key: DOWNLOAD_LIMIT_MAX_REQUESTS
+        value: 5
+      - key: TEMP_DIR
+        value: /tmp/youtube-downloader 
