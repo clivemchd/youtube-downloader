@@ -16,8 +16,8 @@ const ENV_VARS = {
     isProduction 
       ? process.env.PRODUCTION_API_URL || 'https://youdownloadtube.onrender.com'
       : isRef
-        ? 'http://localhost:3000'
-        : 'http://localhost:3000'
+        ? 'http://localhost:9000'
+        : 'http://localhost:9000'
   )).replace(/\/+$/, '') // Remove trailing slashes
 };
 

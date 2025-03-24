@@ -82,7 +82,7 @@ For reference environment (production-like with localhost), use `.env.ref`:
 ```
 # .env.ref
 NODE_ENV=ref
-API_URL=http://localhost:3000
+API_URL=http://localhost:9000
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
 DOWNLOAD_LIMIT_WINDOW_MS=3600000
@@ -94,8 +94,8 @@ Key environment variables:
 - `NODE_ENV`: Set to "development" for local development, "ref" for reference environment, or "production" for production deployment
 - `PRODUCTION_API_URL`: The base URL for API endpoints in production (required)
   - This URL is automatically injected into the frontend code during the build process
-  - In development mode, the frontend uses `http://localhost:3000` by default
-  - In reference mode, the frontend uses `http://localhost:3000`
+  - In development mode, the frontend uses `http://localhost:9000` by default
+  - In reference mode, the frontend uses `http://localhost:9000`
   - In production mode, the frontend uses the `PRODUCTION_API_URL` value
 - `PORT`: The port the server will listen on (Render.com will set this automatically)
 - `LOG_LEVEL`: Logging level (debug, info, warn, error)
@@ -299,8 +299,8 @@ The build process automatically injects environment variables into the frontend 
 3. The build process handles both standalone JavaScript files and inline JavaScript in HTML files.
 4. Environment variables are automatically injected into the frontend code:
    - The `API_URL` constant in the frontend JavaScript is automatically replaced with the appropriate URL based on the environment
-   - In development mode, it uses `http://localhost:3000` by default
-   - In reference mode, it uses `http://localhost:3000`
+   - In development mode, it uses `http://localhost:9000` by default
+   - In reference mode, it uses `http://localhost:9000`
    - In production mode, it uses the `PRODUCTION_API_URL` from `.env.prod`
    - This ensures that API calls are always made to the correct endpoint based on the environment
 
@@ -370,3 +370,31 @@ This application is optimized for deployment on Render.com:
 ## License
 
 ISC 
+
+## Environment Setup
+
+### Development Mode
+
+```bash
+# Copy example environment file
+cp .env.example .env
+
+# Set your environment variables
+API_URL=http://localhost:9000
+# ... other variables
+
+# Start the application
+npm run dev
+```
+
+The application uses different environment configurations:
+- In development mode, the frontend uses `http://localhost:9000` by default
+- In reference mode, the frontend uses `http://localhost:9000`
+- In production mode, it uses the `PRODUCTION_API_URL` from your .env.prod file
+
+## Frontend Configuration
+
+The frontend is configured to connect to different API endpoints based on the environment:
+- In development mode, it uses `http://localhost:9000` by default
+- In reference mode, it uses `http://localhost:9000`
+- In production mode, it uses the value of `PRODUCTION_API_URL` from the .env.prod file

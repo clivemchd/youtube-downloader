@@ -13,7 +13,7 @@ const proxyManager = require('./proxy-manager');
 
 // Get environment variables with defaults
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 9000;
 const RATE_LIMIT_WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10); // 15 minutes
 const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10);
 const DOWNLOAD_LIMIT_WINDOW_MS = parseInt(process.env.DOWNLOAD_LIMIT_WINDOW_MS || '3600000', 10); // 1 hour
