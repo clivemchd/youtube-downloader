@@ -19,6 +19,7 @@ const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || 
 const DOWNLOAD_LIMIT_WINDOW_MS = parseInt(process.env.DOWNLOAD_LIMIT_WINDOW_MS || '3600000', 10); // 1 hour
 const DOWNLOAD_LIMIT_MAX_REQUESTS = parseInt(process.env.DOWNLOAD_LIMIT_MAX_REQUESTS || '10', 10);
 const TEMP_DIR = process.env.TEMP_DIR || path.join(__dirname, 'temp');
+const USE_PROXY = process.env.USE_PROXY === 'true';
 
 // Initialize cache with 1 hour TTL
 const videoCache = new NodeCache({ 
@@ -324,7 +325,7 @@ app.get('/video-info', async (req, res) => {
             throw new Error('No URL provided');
         }
 
-        const videoInfo = await getVideoInfoWithRetry(videoURL, type);
+        const videoInfo = await getVideoInfoWithRetry(videoURL, type, 0, USE_PROXY);
         res.json(videoInfo);
         
     } catch (error) {
@@ -369,7 +370,7 @@ app.get('/download', async (req, res) => {
         logger.info('Starting download for:', cleanURL, 'with itag:', itag, 'type:', type);
         
         // Use retry-enabled function to get video info
-        const info = await getVideoInfoWithRetry(cleanURL, type);
+        const info = await getVideoInfoWithRetry(cleanURL, type, 0, USE_PROXY);
         const format = ytdl.chooseFormat(info.formats, { quality: itag });
         
         if (!format) {
@@ -403,7 +404,7 @@ app.get('/download', async (req, res) => {
             audioStream = await getVideoStreamWithRetry(cleanURL, {
                 quality: itag,
                 filter: 'audioonly'
-            });
+            }, 0, USE_PROXY);
 
             // Pipe stream through FFmpeg
             audioStream.pipe(ffmpeg.stdio[0]);
@@ -449,7 +450,7 @@ app.get('/download', async (req, res) => {
             
             if (selectedFormat.hasAudio) {
                 // If the format has audio, we can stream directly with retry logic
-                const stream = await getVideoStreamWithRetry(cleanURL, { quality: itag });
+                const stream = await getVideoStreamWithRetry(cleanURL, { quality: itag }, 0, USE_PROXY);
                 stream.pipe(res);
             } else {
                 // If no audio in the video stream, we need to merge with best audio
@@ -473,12 +474,12 @@ app.get('/download', async (req, res) => {
                 videoStream = await getVideoStreamWithRetry(cleanURL, {
                     quality: itag,
                     filter: 'videoonly'
-                });
+                }, 0, USE_PROXY);
 
                 audioStream = await getVideoStreamWithRetry(cleanURL, {
                     quality: 'highestaudio',
                     filter: 'audioonly'
-                });
+                }, 0, USE_PROXY);
 
                 // Pipe streams to FFmpeg
                 videoStream.pipe(ffmpeg.stdio[3]);
