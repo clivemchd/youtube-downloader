@@ -62,21 +62,31 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0, useProxy = true)
         // Get a random proxy if available and enabled
         const proxy = useProxy ? proxyManager.getRandomProxy() : null;
         
-        // Configure ytdl options with proxy if available
+        // Generate a random Chrome version between 110 and 122
+        const chromeVersion = Math.floor(Math.random() * (122 - 110 + 1) + 110);
+        
+        // Configure ytdl options with proxy if available and enhanced headers
         const ytdlOptions = {
             requestOptions: {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                    'User-Agent': `Mozilla/5.0 (${process.platform === 'darwin' ? 'Macintosh; Intel Mac OS X 10_15_7' : 'Windows NT 10.0; Win64; x64'}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion}.0.0.0 Safari/537.36`,
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                     'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Sec-Ch-Ua': `"Not A(Brand";v="99", "Google Chrome";v="${chromeVersion}", "Chromium";v="${chromeVersion}"`,
+                    'Sec-Ch-Ua-Mobile': '?0',
+                    'Sec-Ch-Ua-Platform': `"${process.platform === 'darwin' ? 'macOS' : 'Windows'}"`,
                     'Sec-Fetch-Dest': 'document',
                     'Sec-Fetch-Mode': 'navigate',
                     'Sec-Fetch-Site': 'none',
                     'Sec-Fetch-User': '?1',
-                    'Upgrade-Insecure-Requests': '1'
+                    'Upgrade-Insecure-Requests': '1',
+                    'Connection': 'keep-alive',
+                    'Cache-Control': 'max-age=0'
                 }
             }
         };
+        
         if (proxy) {
             logger.info(`Using proxy for video info request: ${proxy}`, { videoId });
             ytdlOptions.requestOptions.proxy = proxy;
@@ -151,7 +161,7 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0, useProxy = true)
             return responseData;
         } catch (error) {
             // Handle bot detection specifically
-            if (error.message.includes('Sign in to confirm') || error.message.includes('bot')) {
+            if (USE_PROXY && (error.message.includes('Sign in to confirm') || error.message.includes('bot'))) {
                 logger.warn('Bot detection triggered, rotating proxy and retrying', { videoId, retryCount });
                 
                 // Force proxy update if we've tried a few times
@@ -171,7 +181,7 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0, useProxy = true)
         }
     } catch (error) {
         // If we hit YouTube's rate limit and haven't exceeded max retries
-        if (error.message.includes('Status code: 429') && retryCount < MAX_RETRIES) {
+        if (USE_PROXY && error.message.includes('Status code: 429') && retryCount < MAX_RETRIES) {
             const waitTime = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
             logger.info(`YouTube rate limit hit, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
             await delay(waitTime);
@@ -203,21 +213,31 @@ async function getVideoStreamWithRetry(url, options, retryCount = 0, useProxy = 
         // Get a random proxy if available and enabled
         const proxy = useProxy ? proxyManager.getRandomProxy() : null;
         
+        // Generate a random Chrome version between 110 and 122
+        const chromeVersion = Math.floor(Math.random() * (122 - 110 + 1) + 110);
+        
         // Configure ytdl options with proxy if available
         const ytdlOptions = { ...options,
             requestOptions: {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                    'User-Agent': `Mozilla/5.0 (${process.platform === 'darwin' ? 'Macintosh; Intel Mac OS X 10_15_7' : 'Windows NT 10.0; Win64; x64'}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${chromeVersion}.0.0.0 Safari/537.36`,
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
                     'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Sec-Ch-Ua': `"Not A(Brand";v="99", "Google Chrome";v="${chromeVersion}", "Chromium";v="${chromeVersion}"`,
+                    'Sec-Ch-Ua-Mobile': '?0',
+                    'Sec-Ch-Ua-Platform': `"${process.platform === 'darwin' ? 'macOS' : 'Windows'}"`,
                     'Sec-Fetch-Dest': 'document',
                     'Sec-Fetch-Mode': 'navigate',
                     'Sec-Fetch-Site': 'none',
                     'Sec-Fetch-User': '?1',
-                    'Upgrade-Insecure-Requests': '1'
+                    'Upgrade-Insecure-Requests': '1',
+                    'Connection': 'keep-alive',
+                    'Cache-Control': 'max-age=0'
                 }
             }
         };
+        
         if (proxy) {
             logger.info(`Using proxy for video stream request: ${proxy}`);
             ytdlOptions.requestOptions.proxy = proxy;
@@ -226,7 +246,7 @@ async function getVideoStreamWithRetry(url, options, retryCount = 0, useProxy = 
         return ytdl(url, ytdlOptions);
     } catch (error) {
         // Handle bot detection specifically
-        if (error.message.includes('Sign in to confirm') || error.message.includes('bot')) {
+        if (USE_PROXY && (error.message.includes('Sign in to confirm') || error.message.includes('bot'))) {
             logger.warn('Bot detection triggered for stream, rotating proxy and retrying', { retryCount });
             
             // Force proxy update if we've tried a few times
@@ -243,9 +263,10 @@ async function getVideoStreamWithRetry(url, options, retryCount = 0, useProxy = 
             }
         }
 
-        if (error.message.includes('Status code: 429') && retryCount < MAX_RETRIES) {
+        // If we hit YouTube's rate limit and haven't exceeded max retries
+        if (USE_PROXY && error.message.includes('Status code: 429') && retryCount < MAX_RETRIES) {
             const waitTime = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
-            logger.info(`YouTube rate limit hit for download, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+            logger.info(`YouTube rate limit hit for stream, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
             await delay(waitTime);
             
             // Try with a different proxy on the next attempt
