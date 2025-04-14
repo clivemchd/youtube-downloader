@@ -19,7 +19,7 @@ const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || 
 const DOWNLOAD_LIMIT_WINDOW_MS = parseInt(process.env.DOWNLOAD_LIMIT_WINDOW_MS || '3600000', 10); // 1 hour
 const DOWNLOAD_LIMIT_MAX_REQUESTS = parseInt(process.env.DOWNLOAD_LIMIT_MAX_REQUESTS || '10', 10);
 const TEMP_DIR = process.env.TEMP_DIR || path.join(__dirname, 'temp');
-const USE_PROXY = process.env.USE_PROXY === 'true';
+const USE_PROXY = process.env.USE_PROXY;
 
 // Initialize cache with 1 hour TTL
 const videoCache = new NodeCache({ 
