@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "YouTube video downloader with quality selection",
   "main": "server.js",
+  "engines": {
+    "node": ">=20.18.1"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "NODE_ENV=development node server.js",

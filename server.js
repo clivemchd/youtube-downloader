@@ -659,6 +659,16 @@ process.on('SIGINT', () => {
     process.exit();
 });
 
+// Add a new endpoint to get version information
+app.get('/version', (req, res) => {
+    res.json({
+        node: process.version,
+        npm: process.env.npm_version || 'unknown',
+        environment: NODE_ENV,
+        ytdl: ytdl.version
+    });
+});
+
 // Export the app for testing before starting the server
 module.exports = app;
 

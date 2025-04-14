@@ -9,43 +9,59 @@ A powerful Node.js application for downloading YouTube videos and audio with qua
 - **HD Video Support**: Download high-definition videos with merged audio and video streams
 - **Quality Selection**: Choose from available video and audio quality options
 - **Rate Limiting**: Prevents abuse with configurable request limits
-- **Proxy Support**: Automatic proxy rotation to avoid YouTube rate limits
+- **Configurable Proxy Support**: Optional proxy support with automatic rotation
 - **Comprehensive Logging**: Detailed logs for debugging and monitoring
 - **Robust Error Handling**: Graceful handling of errors and edge cases
 - **Clean Test Reports**: Visual test reports for development
 - **Environment Configuration**: Separate development, reference, and production settings
 - **Render.com Ready**: Optimized for deployment on Render.com
 
+## Requirements
+
+- Node.js >= 20.18.1 (LTS recommended)
+- FFmpeg (automatically installed via ffmpeg-static)
+- npm or yarn
+
 ## Technology Stack
 
 - **Backend**: Node.js with Express
 - **Video Processing**: FFmpeg for video/audio manipulation
 - **YouTube API**: @distube/ytdl-core for YouTube video extraction
-- **Proxy Management**: Automatic scraping and rotation of free proxies
+- **Proxy Management**: Optional automatic scraping and rotation of free proxies
 - **Logging**: Winston for structured logging
 - **Testing**: Jest and Supertest for automated testing
 - **Environment**: dotenv for environment configuration
 
 ## Installation
 
-1. Clone the repository:
+1. Install Node.js using nvm (recommended):
+   ```bash
+   # Install nvm if you haven't already
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+   
+   # Install and use the latest LTS version of Node.js
+   nvm install --lts
+   nvm use --lts
    ```
+
+2. Clone the repository:
+   ```bash
    git clone <repository-url>
    cd youtube-download
    ```
 
-2. Install dependencies:
-   ```
+3. Install dependencies:
+   ```bash
    npm install
    ```
 
-3. Create environment configuration:
-   ```
+4. Create environment configuration:
+   ```bash
    cp .env.example .env
    ```
 
-4. Start the server:
-   ```
+5. Start the server:
+   ```bash
    npm start
    ```
 
@@ -55,7 +71,7 @@ The server will start on port 3000 by default.
 
 The application uses environment variables to distinguish between development, reference, and production environments:
 
-```
+```env
 # .env.example
 NODE_ENV=development
 PORT=3000
@@ -64,34 +80,35 @@ RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
 DOWNLOAD_LIMIT_WINDOW_MS=3600000
 DOWNLOAD_LIMIT_MAX_REQUESTS=10
+USE_PROXY=false  # Set to 'true' to enable proxy support
 ```
 
 For production, you can create a `.env.prod` file based on the provided `.env.prod.example`:
 
-```
+```env
 # .env.prod
 PRODUCTION_API_URL=https://your-production-domain.com  # Required: Set to your production API URL
 PORT=3000
 NODE_ENV=production
 LOG_LEVEL=info
+USE_PROXY=false  # Enable if needed for your region/use case
 # ... other variables
 ```
 
 For reference environment (production-like with localhost), use `.env.ref`:
 
-```
+```env
 # .env.ref
 NODE_ENV=ref
 API_URL=http://localhost:9000
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-DOWNLOAD_LIMIT_WINDOW_MS=3600000
-DOWNLOAD_LIMIT_MAX_REQUESTS=10
+USE_PROXY=false
+# ... other variables
 ```
 
 Key environment variables:
 
 - `NODE_ENV`: Set to "development" for local development, "ref" for reference environment, or "production" for production deployment
+- `USE_PROXY`: Set to "true" to enable proxy support for YouTube requests (useful if you're encountering rate limits or regional restrictions)
 - `PRODUCTION_API_URL`: The base URL for API endpoints in production (required)
   - This URL is automatically injected into the frontend code during the build process
   - In development mode, the frontend uses `http://localhost:9000` by default
@@ -358,6 +375,31 @@ This application is optimized for deployment on Render.com:
      - `PORT`: Automatically set by Render.com
      - `NODE_ENV`: Set to `production`
      - Other variables as needed from `.env.prod.example`
+
+### Checking Node.js Version on Render.com
+
+There are several ways to verify the Node.js version running on your Render.com deployment:
+
+1. **Using the Version Endpoint**:
+   ```bash
+   curl https://your-app.onrender.com/version
+   ```
+   This will return JSON with Node.js, npm, and other version information.
+
+2. **Using Render.com Environment**:
+   - The application specifies Node.js version >=20.18.1 in package.json
+   - Render.com will use this specification when deploying
+   - You can verify the version in the deployment logs
+
+3. **Using Render.com Dashboard**:
+   - Go to your service in the Render.com dashboard
+   - Check the "Environment" section
+   - The Node.js version will be listed under runtime information
+
+If you need to use a specific Node.js version:
+1. Update the "engines" field in package.json
+2. Commit and push the changes
+3. Redeploy your application on Render.com
 
 ### Important Render.com Configuration Notes
 
