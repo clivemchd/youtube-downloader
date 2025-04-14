@@ -19,7 +19,7 @@ const RATE_LIMIT_MAX_REQUESTS = parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || 
 const DOWNLOAD_LIMIT_WINDOW_MS = parseInt(process.env.DOWNLOAD_LIMIT_WINDOW_MS || '3600000', 10); // 1 hour
 const DOWNLOAD_LIMIT_MAX_REQUESTS = parseInt(process.env.DOWNLOAD_LIMIT_MAX_REQUESTS || '10', 10);
 const TEMP_DIR = process.env.TEMP_DIR || path.join(__dirname, 'temp');
-const USE_PROXY = process.env.USE_PROXY;
+const USE_PROXY = process.env.USE_PROXY === 'true';
 
 // Initialize cache with 1 hour TTL
 const videoCache = new NodeCache({ 
@@ -164,7 +164,7 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0, useProxy = true)
                 await delay(botDetectionDelay);
                 
                 if (retryCount < MAX_RETRIES) {
-                    return getVideoInfoWithRetry(url, type, retryCount + 1, true);
+                    return getVideoInfoWithRetry(url, type, retryCount + 1, USE_PROXY);
                 }
             }
             throw error;
@@ -177,7 +177,7 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0, useProxy = true)
             await delay(waitTime);
             
             // Try with a different proxy on the next attempt
-            return getVideoInfoWithRetry(url, type, retryCount + 1, true);
+            return getVideoInfoWithRetry(url, type, retryCount + 1, USE_PROXY);
         }
         
         // If there's a proxy error, try without proxy
@@ -239,7 +239,7 @@ async function getVideoStreamWithRetry(url, options, retryCount = 0, useProxy = 
             await delay(botDetectionDelay);
             
             if (retryCount < MAX_RETRIES) {
-                return getVideoStreamWithRetry(url, options, retryCount + 1, true);
+                return getVideoStreamWithRetry(url, options, retryCount + 1, USE_PROXY);
             }
         }
 
@@ -249,7 +249,7 @@ async function getVideoStreamWithRetry(url, options, retryCount = 0, useProxy = 
             await delay(waitTime);
             
             // Try with a different proxy on the next attempt
-            return getVideoStreamWithRetry(url, options, retryCount + 1, true);
+            return getVideoStreamWithRetry(url, options, retryCount + 1, USE_PROXY);
         }
         
         // If there's a proxy error, try without proxy
