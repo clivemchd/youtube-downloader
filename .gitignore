@@ -23,6 +23,7 @@ playwright-report/
 # Temporary files
 temp/
 tmp/
+*-base.js
 
 # OS specific files
 .DS_Store
@@ -37,7 +38,5 @@ Thumbs.db
 # Build output
 dist/
 
-# Logs
-logs
-*.log
-npm-debug.log*
+# V8 compilation cache
+*-base.js

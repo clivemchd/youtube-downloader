@@ -28,8 +28,8 @@ const videoCache = new NodeCache({
 });
 
 // Retry configuration
-const MAX_RETRIES = 3;
-const INITIAL_RETRY_DELAY = 1000; // 1 second
+const MAX_RETRIES = 5;
+const INITIAL_RETRY_DELAY = 2000; // 2 seconds
 
 // Helper function to delay execution
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -62,78 +62,112 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0, useProxy = true)
         const proxy = useProxy ? proxyManager.getRandomProxy() : null;
         
         // Configure ytdl options with proxy if available
-        const ytdlOptions = {};
-        if (proxy) {
-            logger.info(`Using proxy for video info request: ${proxy}`, { videoId });
-            ytdlOptions.requestOptions = { proxy };
-        }
-        
-        const info = await ytdl.getInfo(cleanURL, ytdlOptions);
-        
-        // Process formats based on type
-        let formats;
-        if (type === 'audio') {
-            formats = info.formats
-                .filter(format => format.hasAudio && !format.hasVideo)
-                .map(format => ({
-                    itag: format.itag,
-                    quality: format.audioQuality,
-                    container: format.container,
-                    audioQuality: format.audioQuality,
-                    bitrate: format.bitrate
-                }))
-                .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
-        } else {
-            const videoFormats = info.formats
-                .filter(format => format.hasVideo)
-                .map(format => ({
-                    itag: format.itag,
-                    quality: format.qualityLabel,
-                    container: format.container,
-                    hasAudio: format.hasAudio,
-                    fps: format.fps,
-                    videoCodec: format.videoCodec,
-                    audioCodec: format.audioCodec,
-                    bitrate: format.bitrate
-                }))
-                .sort((a, b) => {
-                    const qualityA = parseInt(a.quality) || 0;
-                    const qualityB = parseInt(b.quality) || 0;
-                    if (qualityA === qualityB) {
-                        if (a.hasAudio !== b.hasAudio) return a.hasAudio ? -1 : 1;
-                        return (b.fps || 0) - (a.fps || 0);
-                    }
-                    return qualityB - qualityA;
-                });
-
-            formats = Object.values(videoFormats.reduce((acc, format) => {
-                const quality = format.quality;
-                if (!acc[quality] || (format.hasAudio && !acc[quality].hasAudio)) {
-                    acc[quality] = format;
+        const ytdlOptions = {
+            requestOptions: {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'none',
+                    'Sec-Fetch-User': '?1',
+                    'Upgrade-Insecure-Requests': '1'
                 }
-                return acc;
-            }, {}));
-        }
-
-        // Prepare response data
-        const responseData = {
-            title: info.videoDetails.title,
-            formats: formats,
-            videoDetails: {
-                title: info.videoDetails.title,
-                lengthSeconds: info.videoDetails.lengthSeconds,
-                author: info.videoDetails.author.name,
-                videoId: info.videoDetails.videoId,
-                isLive: info.videoDetails.isLive,
-                thumbnails: info.videoDetails.thumbnails
             }
         };
+        if (proxy) {
+            logger.info(`Using proxy for video info request: ${proxy}`, { videoId });
+            ytdlOptions.requestOptions.proxy = proxy;
+        }
+        
+        try {
+            const info = await ytdl.getInfo(cleanURL, ytdlOptions);
+            
+            // Process formats based on type
+            let formats;
+            if (type === 'audio') {
+                formats = info.formats
+                    .filter(format => format.hasAudio && !format.hasVideo)
+                    .map(format => ({
+                        itag: format.itag,
+                        quality: format.audioQuality,
+                        container: format.container,
+                        audioQuality: format.audioQuality,
+                        bitrate: format.bitrate
+                    }))
+                    .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
+            } else {
+                const videoFormats = info.formats
+                    .filter(format => format.hasVideo)
+                    .map(format => ({
+                        itag: format.itag,
+                        quality: format.qualityLabel,
+                        container: format.container,
+                        hasAudio: format.hasAudio,
+                        fps: format.fps,
+                        videoCodec: format.videoCodec,
+                        audioCodec: format.audioCodec,
+                        bitrate: format.bitrate
+                    }))
+                    .sort((a, b) => {
+                        const qualityA = parseInt(a.quality) || 0;
+                        const qualityB = parseInt(b.quality) || 0;
+                        if (qualityA === qualityB) {
+                            if (a.hasAudio !== b.hasAudio) return a.hasAudio ? -1 : 1;
+                            return (b.fps || 0) - (a.fps || 0);
+                        }
+                        return qualityB - qualityA;
+                    });
 
-        // Cache the processed data
-        videoCache.set(cacheKey, responseData);
-        logger.info('Cached video info', { videoId });
+                formats = Object.values(videoFormats.reduce((acc, format) => {
+                    const quality = format.quality;
+                    if (!acc[quality] || (format.hasAudio && !acc[quality].hasAudio)) {
+                        acc[quality] = format;
+                    }
+                    return acc;
+                }, {}));
+            }
 
-        return responseData;
+            // Prepare response data
+            const responseData = {
+                title: info.videoDetails.title,
+                formats: formats,
+                videoDetails: {
+                    title: info.videoDetails.title,
+                    lengthSeconds: info.videoDetails.lengthSeconds,
+                    author: info.videoDetails.author.name,
+                    videoId: info.videoDetails.videoId,
+                    isLive: info.videoDetails.isLive,
+                    thumbnails: info.videoDetails.thumbnails
+                }
+            };
+
+            // Cache the processed data
+            videoCache.set(cacheKey, responseData);
+            logger.info('Cached video info', { videoId });
+
+            return responseData;
+        } catch (error) {
+            // Handle bot detection specifically
+            if (error.message.includes('Sign in to confirm') || error.message.includes('bot')) {
+                logger.warn('Bot detection triggered, rotating proxy and retrying', { videoId, retryCount });
+                
+                // Force proxy update if we've tried a few times
+                if (retryCount > 0 && retryCount % 2 === 0) {
+                    await proxyManager.forceProxyUpdate();
+                }
+                
+                // Add a longer delay for bot detection
+                const botDetectionDelay = INITIAL_RETRY_DELAY * Math.pow(3, retryCount);
+                await delay(botDetectionDelay);
+                
+                if (retryCount < MAX_RETRIES) {
+                    return getVideoInfoWithRetry(url, type, retryCount + 1, true);
+                }
+            }
+            throw error;
+        }
     } catch (error) {
         // If we hit YouTube's rate limit and haven't exceeded max retries
         if (error.message.includes('Status code: 429') && retryCount < MAX_RETRIES) {
@@ -169,14 +203,45 @@ async function getVideoStreamWithRetry(url, options, retryCount = 0, useProxy = 
         const proxy = useProxy ? proxyManager.getRandomProxy() : null;
         
         // Configure ytdl options with proxy if available
-        const ytdlOptions = { ...options };
+        const ytdlOptions = { ...options,
+            requestOptions: {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'none',
+                    'Sec-Fetch-User': '?1',
+                    'Upgrade-Insecure-Requests': '1'
+                }
+            }
+        };
         if (proxy) {
             logger.info(`Using proxy for video stream request: ${proxy}`);
-            ytdlOptions.requestOptions = { proxy };
+            ytdlOptions.requestOptions.proxy = proxy;
         }
         
         return ytdl(url, ytdlOptions);
     } catch (error) {
+        // Handle bot detection specifically
+        if (error.message.includes('Sign in to confirm') || error.message.includes('bot')) {
+            logger.warn('Bot detection triggered for stream, rotating proxy and retrying', { retryCount });
+            
+            // Force proxy update if we've tried a few times
+            if (retryCount > 0 && retryCount % 2 === 0) {
+                await proxyManager.forceProxyUpdate();
+            }
+            
+            // Add a longer delay for bot detection
+            const botDetectionDelay = INITIAL_RETRY_DELAY * Math.pow(3, retryCount);
+            await delay(botDetectionDelay);
+            
+            if (retryCount < MAX_RETRIES) {
+                return getVideoStreamWithRetry(url, options, retryCount + 1, true);
+            }
+        }
+
         if (error.message.includes('Status code: 429') && retryCount < MAX_RETRIES) {
             const waitTime = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
             logger.info(`YouTube rate limit hit for download, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
