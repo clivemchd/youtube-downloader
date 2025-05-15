@@ -30,11 +30,24 @@ A powerful Node.js application for downloading YouTube videos and audio with qua
 YouTube has implemented anti-bot measures that require users to verify they are not robots by signing in. This application uses the `youtubei.js` library to bypass these restrictions without requiring user authentication. The implementation:
 
 - Uses Innertube API endpoints directly rather than scraping
-- Handles YouTube's "Sign in to confirm you're not a bot" errors automatically 
+- Initializes a client with browser-like configurations to appear as a legitimate user
+- Sets appropriate User-Agent headers to simulate real browser traffic
+- Implements sophisticated device and client identification to avoid bot detection
+- Generates session identifiers locally to maintain persistence between requests
+- Properly handles YouTube's response structure with robust error checking
+- Implements automatic retries with exponential backoff for intermittent errors
+- Handles YouTube's "Sign in to confirm you're not a bot" errors automatically
 - Provides more reliable access to video streams and metadata
-- Implements proper retry mechanisms for intermittent errors
+- Caches video information to reduce repeated requests to YouTube
 
-This approach allows the application to download videos reliably without requiring user authentication or dealing with CAPTCHAs.
+Our implementation specifically addresses the "Sign in to confirm you're not a bot" error by:
+
+1. Using the Innertube API directly instead of web scraping
+2. Configuring proper client identification that YouTube recognizes
+3. Implementing proper format extraction with fallbacks for different video types
+4. Maintaining a more stable connection by refreshing the client periodically
+
+This approach allows the application to download videos reliably without requiring user authentication, dealing with CAPTCHAs, or storing any YouTube credentials.
 
 ## Installation
 
