@@ -8,6 +8,7 @@ A powerful Node.js application for downloading YouTube videos and audio with qua
 - **Audio Downloads**: Extract audio from YouTube videos and convert to MP3
 - **HD Video Support**: Download high-definition videos with merged audio and video streams
 - **Quality Selection**: Choose from available video and audio quality options
+- **Anti-Bot Protection Bypass**: Uses modern YouTube API client to bypass "Sign in to confirm you're not a bot" errors
 - **Rate Limiting**: Prevents abuse with configurable request limits
 - **Comprehensive Logging**: Detailed logs for debugging and monitoring
 - **Robust Error Handling**: Graceful handling of errors and edge cases
@@ -19,10 +20,21 @@ A powerful Node.js application for downloading YouTube videos and audio with qua
 
 - **Backend**: Node.js with Express
 - **Video Processing**: FFmpeg for video/audio manipulation
-- **YouTube API**: @distube/ytdl-core for YouTube video extraction
+- **YouTube API**: youtubei.js for YouTube video extraction
 - **Logging**: Winston for structured logging
 - **Testing**: Jest and Supertest for automated testing
 - **Environment**: dotenv for environment configuration
+
+## Anti-Bot Protection
+
+YouTube has implemented anti-bot measures that require users to verify they are not robots by signing in. This application uses the `youtubei.js` library to bypass these restrictions without requiring user authentication. The implementation:
+
+- Uses Innertube API endpoints directly rather than scraping
+- Handles YouTube's "Sign in to confirm you're not a bot" errors automatically 
+- Provides more reliable access to video streams and metadata
+- Implements proper retry mechanisms for intermittent errors
+
+This approach allows the application to download videos reliably without requiring user authentication or dealing with CAPTCHAs.
 
 ## Installation
 

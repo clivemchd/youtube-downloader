@@ -32,7 +32,8 @@
     "html-minifier-terser": "^7.2.0",
     "node-cache": "^5.1.2",
     "terser": "^5.39.0",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "youtubei.js": "^13.4.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.51.0",

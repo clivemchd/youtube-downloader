@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const ytdl = require('@distube/ytdl-core');
+const { Innertube, UniversalCache } = require('youtubei.js');
 const fs = require('fs');
 const path = require('path');
 const ffmpeg = require('fluent-ffmpeg');
@@ -33,12 +33,31 @@ const INITIAL_RETRY_DELAY = 1000; // 1 second
 // Helper function to delay execution
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
+// Initialize Innertube client (lazy loaded)
+let innertubeClient = null;
+const getInnertubeClient = async () => {
+    if (!innertubeClient) {
+        innertubeClient = await Innertube.create({
+            cache: new UniversalCache(false),
+            generate_session_locally: true,
+        });
+        logger.info('Innertube client initialized');
+    }
+    return innertubeClient;
+};
+
+// Extract videoId from URL
+const getVideoID = (url) => {
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+    const match = url.match(regex);
+    return match ? match[1] : url;
+};
+
 // Helper function to get video info with retry logic and caching
 async function getVideoInfoWithRetry(url, type, retryCount = 0) {
     try {
         // Clean and validate the URL
-        const videoId = ytdl.getVideoID(url);
-        const cleanURL = `https://www.youtube.com/watch?v=${videoId}`;
+        const videoId = getVideoID(url);
         
         // Check cache first
         const cacheKey = `${videoId}-${type}`;
@@ -51,32 +70,47 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0) {
 
         // If not in cache, fetch from YouTube
         logger.info('Fetching video info from YouTube', { videoId });
-        const info = await ytdl.getInfo(cleanURL);
+        
+        // Get the Innertube client
+        const yt = await getInnertubeClient();
+        const info = await yt.getInfo(videoId);
+        
+        if (!info) {
+            throw new Error('Failed to fetch video information');
+        }
         
         // Process formats based on type
         let formats;
+        const streamingData = info.streaming_data;
+        
         if (type === 'audio') {
-            formats = info.formats
-                .filter(format => format.hasAudio && !format.hasVideo)
+            // Filter audio formats
+            formats = streamingData.adaptive_formats
+                .filter(format => format.audio_quality && !format.has_video)
                 .map(format => ({
                     itag: format.itag,
-                    quality: format.audioQuality,
-                    container: format.container,
-                    audioQuality: format.audioQuality,
+                    quality: format.audio_quality,
+                    container: format.mime_type.split('/')[1].split(';')[0],
+                    audioQuality: format.audio_quality,
                     bitrate: format.bitrate
                 }))
                 .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
         } else {
-            const videoFormats = info.formats
-                .filter(format => format.hasVideo)
+            // Filter video formats
+            const videoFormats = streamingData.adaptive_formats
+                .filter(format => format.has_video)
                 .map(format => ({
                     itag: format.itag,
-                    quality: format.qualityLabel,
-                    container: format.container,
-                    hasAudio: format.hasAudio,
-                    fps: format.fps,
-                    videoCodec: format.videoCodec,
-                    audioCodec: format.audioCodec,
+                    quality: format.quality_label || format.quality,
+                    container: format.mime_type.split('/')[1].split(';')[0],
+                    hasAudio: format.has_audio,
+                    fps: format.fps || 0,
+                    videoCodec: format.mime_type.includes('codecs=') 
+                        ? format.mime_type.split('codecs=')[1].replace(/"/g, '').split(',')[0] 
+                        : null,
+                    audioCodec: (format.has_audio && format.mime_type.includes('codecs=')) 
+                        ? format.mime_type.split('codecs=')[1].replace(/"/g, '').split(',')[1] 
+                        : null,
                     bitrate: format.bitrate
                 }))
                 .sort((a, b) => {
@@ -100,15 +134,15 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0) {
 
         // Prepare response data
         const responseData = {
-            title: info.videoDetails.title,
+            title: info.basic_info.title,
             formats: formats,
             videoDetails: {
-                title: info.videoDetails.title,
-                lengthSeconds: info.videoDetails.lengthSeconds,
-                author: info.videoDetails.author.name,
-                videoId: info.videoDetails.videoId,
-                isLive: info.videoDetails.isLive,
-                thumbnails: info.videoDetails.thumbnails
+                title: info.basic_info.title,
+                lengthSeconds: info.basic_info.duration,
+                author: info.basic_info.author,
+                videoId: videoId,
+                isLive: info.basic_info.is_live,
+                thumbnails: info.basic_info.thumbnail
             }
         };
 
@@ -119,7 +153,7 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0) {
         return responseData;
     } catch (error) {
         // If we hit YouTube's rate limit and haven't exceeded max retries
-        if (error.message.includes('Status code: 429') && retryCount < MAX_RETRIES) {
+        if ((error.message.includes('Status code: 429') || error.message.includes('Sign in to confirm')) && retryCount < MAX_RETRIES) {
             const waitTime = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
             logger.info(`YouTube rate limit hit, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
             await delay(waitTime);
@@ -132,9 +166,64 @@ async function getVideoInfoWithRetry(url, type, retryCount = 0) {
 // Helper function to get video stream with retry logic
 async function getVideoStreamWithRetry(url, options, retryCount = 0) {
     try {
-        return ytdl(url, options);
+        const videoId = getVideoID(url);
+        const yt = await getInnertubeClient();
+        const info = await yt.getInfo(videoId);
+        
+        if (!info || !info.streaming_data) {
+            throw new Error('No streaming data available');
+        }
+        
+        // Find the format with the specified itag
+        const format = info.streaming_data.adaptive_formats.find(f => f.itag === parseInt(options.quality)) || 
+                      info.streaming_data.formats.find(f => f.itag === parseInt(options.quality));
+        
+        if (!format) {
+            throw new Error(`Format with itag ${options.quality} not found`);
+        }
+        
+        // Handle filter options (audio only or video only)
+        if (options.filter === 'audioonly' && !format.has_audio) {
+            const audioFormat = info.streaming_data.adaptive_formats
+                .filter(f => f.has_audio && !f.has_video)
+                .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0];
+                
+            if (!audioFormat) {
+                throw new Error('No audio format found');
+            }
+            
+            const stream = await yt.download(videoId, {
+                type: 'audio',
+                quality: audioFormat.itag.toString()
+            });
+            
+            return stream;
+        } else if (options.filter === 'videoonly' && !format.has_video) {
+            const videoFormat = info.streaming_data.adaptive_formats
+                .filter(f => f.has_video && !f.has_audio)
+                .sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0];
+                
+            if (!videoFormat) {
+                throw new Error('No video format found');
+            }
+            
+            const stream = await yt.download(videoId, {
+                type: 'video',
+                quality: videoFormat.itag.toString()
+            });
+            
+            return stream;
+        }
+        
+        // Download the requested format
+        const stream = await yt.download(videoId, {
+            type: format.has_video ? 'video' : 'audio',
+            quality: format.itag.toString()
+        });
+        
+        return stream;
     } catch (error) {
-        if (error.message.includes('Status code: 429') && retryCount < MAX_RETRIES) {
+        if ((error.message.includes('Status code: 429') || error.message.includes('Sign in to confirm')) && retryCount < MAX_RETRIES) {
             const waitTime = INITIAL_RETRY_DELAY * Math.pow(2, retryCount);
             logger.info(`YouTube rate limit hit for download, retrying in ${waitTime}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`);
             await delay(waitTime);
@@ -142,6 +231,15 @@ async function getVideoStreamWithRetry(url, options, retryCount = 0) {
         }
         throw error;
     }
+}
+
+// Helper function to choose the best format based on itag
+function chooseFormat(formats, options) {
+    const format = formats.find(f => f.itag === parseInt(options.quality));
+    if (!format) {
+        throw new Error(`Format with itag ${options.quality} not found`);
+    }
+    return format;
 }
 
 // Set ffmpeg path
@@ -244,14 +342,14 @@ app.get('/download', async (req, res) => {
         }
 
         // Clean and validate the URL
-        const videoId = ytdl.getVideoID(url);
+        const videoId = getVideoID(url);
         const cleanURL = `https://www.youtube.com/watch?v=${videoId}`;
 
         logger.info('Starting download for:', cleanURL, 'with itag:', itag, 'type:', type);
         
         // Use retry-enabled function to get video info
         const info = await getVideoInfoWithRetry(cleanURL, type);
-        const format = ytdl.chooseFormat(info.formats, { quality: itag });
+        const format = chooseFormat(info.formats, { quality: itag });
         
         if (!format) {
             throw new Error('Selected quality format not available');
@@ -428,7 +526,7 @@ app.get('/download', async (req, res) => {
             let statusCode = 400;
             let errorMessage = 'Failed to download. Please try again or select a different quality.';
             
-            if (error.message.includes('Status code: 429')) {
+            if (error.message.includes('Status code: 429') || error.message.includes('Sign in to confirm')) {
                 statusCode = 429;
                 errorMessage = 'YouTube API rate limit reached. Please try again in a few seconds.';
             }
@@ -525,6 +623,6 @@ module.exports = app;
 if (require.main === module) {
     app.listen(PORT, () => {
         logger.info(`Server is running in ${NODE_ENV} mode on port ${PORT}`);
-        logger.info(`@distube/ytdl-core version: ${ytdl.version}`);
+        logger.info(`Using youtubei.js for YouTube API access`);
     });
 } 
