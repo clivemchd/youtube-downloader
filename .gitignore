@@ -39,3 +39,7 @@ dist/
 logs
 *.log
 npm-debug.log*
+
+*-watch.json
+*-watch.html
+*.watch
